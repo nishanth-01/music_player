@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="bn_height">45dp</dimen>
+
+    <!-- MiniController -->
+    <dimen name="mc_icon_sides">53dp</dimen>
+    <dimen name="mc_display_name_size">17sp</dimen>
+    <dimen name="mc_artist_name_size">14sp</dimen>
+
+    <!-- fragment_player -->
+    <dimen name="player_main_albumart_sides">350dp</dimen>
+    <dimen name="fragment_player_display_name_size">26sp</dimen>
+    <dimen name="fragment_player_artist_name_size">20sp</dimen>
+
+    <!-- values are related to each other check and change-->
+    <!-- music_item -->
+    <dimen name="music_item_display_icon_sides">50dp</dimen>
+    <dimen name="music_item_display_icon_margin">10dp</dimen>
+    <dimen name="music_item_display_name_margin_s">4dp</dimen>
+    <dimen name="music_item_options_width">40dp</dimen>
+    <dimen name="music_item_options_margin">0dp</dimen>
+    <dimen name="music_item_options_padding">10dp</dimen>
+    <dimen name="music_item_title_textsize">15.9sp</dimen>
+    <dimen name="music_item_artist_name_textsize">13sp</dimen>
+
+    <!-- Playlist Add Button -->
+    <dimen name="add_playlist_button_sides">50dp</dimen>
+
+    <!-- fragment_queue-->
+    <dimen name="fragment_queue_control_button_sides">60dp</dimen>
+    <dimen name="fragment_queue_play_next_previous_padding">8dp</dimen>
+
+    <!-- queue_item-->
+    <dimen name="queue_item_icon_sides">53dp</dimen>
+    <dimen name="queue_item_display_name_textsize">20sp</dimen>
+    <dimen name="queue_item_artist_name_textsize">15sp</dimen>
+    <dimen name="queue_item_height">50dp</dimen>
+    <dimen name="queue_item_margin_tse">5dp</dimen>
+    <dimen name="queue_item_close_icon_padding">18dp</dimen>
+
+    <!-- playlist item -->
+    <dimen name="playlist_item_image_size">70dp</dimen>
+    <dimen name="playlist_item_image_margin">10dp</dimen>
+    <dimen name="playlist_item_display_name_size">26sp</dimen>
+    <dimen name="playlist_item_display_name_margin_lr">@dimen/playlist_item_image_margin</dimen>
+    <dimen name="playlist_item_no_of_songs_text_size">19sp</dimen>
+    <dimen name="playlist_item_duration_text_padding">2dp</dimen>
+    <dimen name="playlist_item_display_name_padding">2sp</dimen>
+    <dimen name="playlist_item_margin">3dp</dimen>
+</resources>

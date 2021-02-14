@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/app_start_screen"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="#383838"
+    tools:viewBindingIgnore="true"
+    android:clickable="true">
+
+    <ImageView
+        android:id="@+id/imageview_app_initial_loading_screen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_new_home"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    <!--TEMP-->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/imageview_app_initial_loading_screen"
+        android:layout_centerHorizontal="true"
+        android:text="[App Icon Goes here]"
+        android:textColor="#ffffff"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/imageview_app_initial_loading_screen"
+        app:layout_constraintStart_toStartOf="@+id/imageview_app_initial_loading_screen"
+        app:layout_constraintTop_toBottomOf="@+id/imageview_app_initial_loading_screen" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="main_bottom_nav_bg">#1c1c1c</color>
+    <color name="main_bottom_nav_divider_color">#424242</color>
+    <color name="bottom_nav_text_color">@color/white</color>
+
+    <!--Local Media List Item-->
+    <color name="music_item_options_ic_bg">#595959</color>
+
+    <!-- TabLayout Title Color -->
+    <color name="tablayout_selected_text_color">#00fc54</color>
+    <color name="tablayout_text_color">#adadad</color>
+
+    <!-- fragment_player -->
+    <color name="fragment_player_bg">#adadad</color>
+
+    <!-- fragment_queue-->
+    <color name="fragment_queue_bg">#4a4a4a</color>
+    <color name="fragment_queue_controlls_bg">#DD000000</color>
+
+    <!-- music_item -->
+    <color name="music_item_bg">@color/black</color>
+
+    <!-- playlist_item -->
+    <color name="playlist_item_bg_color">@color/black</color>
+
+    <!-- fragment_playlists -->
+    <color name="fragment_playlists_bg_color">#383838</color>
+</resources>

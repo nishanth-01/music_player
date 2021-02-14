@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/music_item_bg">
+    <!-- replace with boxed icon -->
+    <ImageView
+        android:id="@+id/display_icon"
+        android:layout_width="@dimen/music_item_display_icon_sides"
+        android:layout_height="@dimen/music_item_display_icon_sides"
+        android:layout_margin="@dimen/music_item_display_icon_margin"
+        android:background="@color/exo_gray"
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@drawable/music_item_menu_def_thumb" />
+
+    <TextView
+        android:id="@+id/textview_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/music_item_display_name_margin_s"
+        android:ellipsize="end"
+        android:fontFamily="@font/roboto_medium_numbers"
+        android:singleLine="true"
+        android:textAlignment="textStart"
+        android:textColor="#F8F8FF"
+        android:textSize="@dimen/music_item_title_textsize"
+        android:paddingStart="8dp"
+
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintBottom_toTopOf="@id/textview_artist"
+        app:layout_constraintEnd_toStartOf="@id/options"
+        app:layout_constraintStart_toEndOf="@id/display_icon"
+        app:layout_constraintTop_toTopOf="@+id/display_icon"
+        tools:text="Unknown Name" />
+
+    <TextView
+        android:id="@+id/textview_artist"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textAlignment="textStart"
+        android:textColor="#e0e0e0"
+        android:textSize="@dimen/music_item_artist_name_textsize"
+        android:paddingStart="9dp"
+
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintBottom_toBottomOf="@+id/display_icon"
+        app:layout_constraintEnd_toEndOf="@+id/textview_title"
+        app:layout_constraintStart_toStartOf="@+id/textview_title"
+        app:layout_constraintTop_toBottomOf="@+id/textview_title"
+        tools:text="Unknown Artist" />
+
+    <ImageView
+        android:id="@+id/options"
+        android:layout_width="@dimen/music_item_options_width"
+        android:layout_height="0dp"
+        android:padding="@dimen/music_item_options_padding"
+        android:src="@drawable/ic_triple_dot"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

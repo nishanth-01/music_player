@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/playlist_item_bg"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/playlist_item_margin">
+
+    <ImageView
+        android:id="@+id/display_icon"
+        android:layout_width="@dimen/playlist_item_image_size"
+        android:layout_height="@dimen/playlist_item_image_size"
+        android:layout_margin="@dimen/playlist_item_image_margin"
+        tools:src="@drawable/exo_ic_default_album_image"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/display_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/playlist_item_display_name_margin_lr"
+        android:layout_marginEnd="@dimen/playlist_item_display_name_margin_lr"
+        tools:text="Playlist1"
+        android:textSize="@dimen/playlist_item_display_name_size"
+        android:fontFamily="@font/open_sans_bold"
+        android:textColor="@color/white"
+
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintBottom_toTopOf="@id/no_of_songs"
+        app:layout_constraintEnd_toStartOf="@+id/display_icon"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/display_icon" />
+
+    <TextView
+        android:id="@+id/no_of_songs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="@dimen/playlist_item_no_of_songs_text_size"
+
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintBottom_toBottomOf="@+id/display_icon"
+        app:layout_constraintEnd_toStartOf="@id/no_of_songs_suffix"
+        app:layout_constraintStart_toStartOf="@+id/display_name"
+        app:layout_constraintTop_toBottomOf="@id/display_name"
+        tools:text="3" />
+    <TextView android:id="@+id/no_of_songs_suffix"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:text=" Songs"
+        android:textSize="@dimen/playlist_item_no_of_songs_text_size"
+        android:textColor="@color/white"
+
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintTop_toTopOf="@id/no_of_songs"
+        app:layout_constraintBottom_toBottomOf="@id/no_of_songs"
+        app:layout_constraintStart_toEndOf="@id/no_of_songs"
+        app:layout_constraintEnd_toEndOf="@id/display_name"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

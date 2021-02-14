@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/fragment_player_bg">
+
+    <ImageView
+        android:id="@+id/albumart"
+        android:layout_width="@dimen/player_main_albumart_sides"
+        android:layout_height="@dimen/player_main_albumart_sides"
+        android:layout_marginTop="30dp"
+        android:src="@drawable/exo_ic_default_album_image"
+        android:background="@color/white"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/display_name"
+        android:layout_width="350dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="marquee"
+        android:fontFamily="@font/roboto_medium_numbers"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:text="Sample Display Name" android:textColor="@color/white" android:textSize="@dimen/fragment_player_display_name_size"
+
+        app:layout_constraintBottom_toTopOf="@id/artist"
+        app:layout_constraintEnd_toEndOf="@id/albumart"
+        app:layout_constraintStart_toStartOf="@id/albumart"
+        app:layout_constraintTop_toBottomOf="@id/albumart" />
+
+    <TextView
+        android:id="@+id/artist"
+        android:layout_width="350dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="marquee"
+        android:fontFamily="@font/roboto_medium_numbers"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:text="Dr.Dre"
+        android:textColor="@color/white"
+        android:textSize="@dimen/fragment_player_artist_name_size"
+
+        app:layout_constraintEnd_toEndOf="@id/albumart"
+        app:layout_constraintStart_toStartOf="@id/albumart"
+        app:layout_constraintTop_toBottomOf="@id/display_name" />
+    <ImageView
+        android:id="@+id/controlls_previous_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:src="@drawable/exo_controls_previous"
+        app:layout_constraintBottom_toBottomOf="@+id/controlls_play_pause_button"
+        app:layout_constraintEnd_toStartOf="@+id/controlls_play_pause_button"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/controlls_play_pause_button" />
+
+    <ImageView
+        android:id="@+id/controlls_play_pause_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:src="@drawable/exo_controls_play"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/controlls_next_button"
+        app:layout_constraintStart_toEndOf="@id/controlls_previous_button"
+        app:layout_constraintTop_toBottomOf="@id/artist" />
+    <ImageView
+        android:id="@+id/controlls_next_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:src="@drawable/exo_controls_next"
+        app:layout_constraintBottom_toBottomOf="@+id/controlls_play_pause_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/controlls_play_pause_button"
+        app:layout_constraintTop_toTopOf="@id/controlls_play_pause_button" />
+
+    <Button
+        android:id="@+id/queue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Queue"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/controlls_next_button"
+        app:layout_constraintStart_toStartOf="@+id/controlls_previous_button"
+        app:layout_constraintTop_toBottomOf="@+id/controlls_play_pause_button" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

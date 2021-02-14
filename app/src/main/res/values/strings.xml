@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Media Session</string>
+
+    <string name="id_local_media">tb_all_local_media#_#</string>
+    <string name="id_local_playlists">tc_all_playlist#_#</string>
+
+    <string name="notification_channel_name">title</string>
+    <string name="notification_channel_description">Description</string>
+
+    <string name="user_visible_no_media_found_note">No Media Found</string>
+    <string name="user_visible_error_note">Error Occured</string>
+
+    <!-- Tab Names -->
+    <string name="tab_name_local_media">Local Music</string>
+    <string name="tab_name_albums">Albums</string>
+    <string name="tab_name_artist">Artists</string>
+    <string name="tab_name_genre">Genre</string>
+    <string name="tab_name_playlists">Playlists</string>
+    <string name="tab_name_favorites">Favorite</string>
+
+    <!-- Player views Transistion names-->
+    <string name="transisition_name_albumart_mc">tn_aa_mc</string>
+    <string name="transisition_name_albumart">tn_aa</string>
+
+    <!-- MediaDescriptionCompat -->
+    <string name="mediadescription_default_genre_name">-</string>
+    <string name="mediadescription_default_artist_name">-</string>
+    <string name="mediadescription_default_display_name">-</string>
+    <string name="mediadescription_default_duration">0</string>
+</resources>
