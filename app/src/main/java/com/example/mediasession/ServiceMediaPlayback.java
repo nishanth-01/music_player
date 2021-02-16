@@ -47,7 +47,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements AudioManager.OnAudioFocusChangeListener, Repositary.Observer {
+public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements AudioManager.OnAudioFocusChangeListener{
     private static final String TAG = "ServiceMediaPlayback";
     /* move all declared constants and make sure they dont conflict */
 
@@ -58,35 +58,30 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     /*this also  means that controllers are ready*/
     static final byte SERVICE_CONNECTED = 2;
 
-    static final String MEDIA_DESCRIPTION_KEY_ARTIST = "md_key_artist";
     static final String MEDIA_DESCRIPTION_KEY_GENRE = "md_key_genre";
+    static final String MEDIA_DESCRIPTION_KEY_ARTIST = "md_key_artist";
     static final String MEDIA_DESCRIPTION_KEY_DURATION = "md_key_duration";
 
     /* custom actions */
-    static final String ACTION_ADD_PLAYLIST = "action_add_playlist";
-    static final String ACTION_REMOVE_PLAYLIST = "action_remove_playlist";
-    static final String ACTION_REMOVE_QUEUE_ITEM = "action_remove_queue_item";
-    static final String ACTION_ADD_PLAYLIST_MEMBER = "action_add_playlist_member";
-    static final String ACTION_REMOVE_PLAYLIST_MEMBER = "action_remove_playlist_member";
+    static final String ACTION_ADD_PLAYLIST = "1";
+    static final String ACTION_REMOVE_PLAYLIST = "2";
+    static final String ACTION_REMOVE_QUEUE_ITEM = "3";
+    static final String ACTION_ADD_PLAYLIST_MEMBER = "4";
+    static final String ACTION_REMOVE_PLAYLIST_MEMBER = "5";
+    static final String ACTION_INCLUDE_INTERNAL_STOARAGE = "6";
+    
     /** CADK - Custom Action Data Key **/
-    static final String CADK_PLAYLIST_NAME = "cadk_playlist_name";
-    /** CADK - Custom Action Data Key **/
-    static final String CADK_QUEUE_ID = "cadk_queue_id";
-    /** CADK - Custom Action Data Key **/
-    static final String CADK_PLAYLIST_ID = "cadk_playlist_id";
-    /** CADK - Custom Action Data Key **/
-    static final String CADK_MEMBER_URI = "cadk_member_uri";
+    static final String CADK_QUEUE_ID = "01";
+    static final String CADK_MEMBER_URI = "02";
+    static final String CADK_PLAYLIST_ID = "03";
+    static final String CADK_PLAYLIST_NAME = "04";
+    static final String CADK_INCLUDE_INTERNAL_STORAGE_BOOLEAN = "05";
 
     static final String EXTRAS_KEY_PLAYER_STATE = "exoplayer_state";
 
-    private final int THUMBNAIL_SIDES = 60;//change by checking screen size
-
-    private final String[] LOCAL_MEDIA_QUERY_PROJECTION =
-            new String[] {MediaStore.Audio.Media._ID , MediaStore.Audio.Media.DISPLAY_NAME };
     private ContentObserver mInternalContentObserver;
     private ContentObserver mExternalContentObserver;
-    private final String[] PLAYLIST_MEMBER_SELECTION =
-            new String[]{MediaStore.Audio.Playlists.Members.AUDIO_ID};
+    private final String[] PLAYLIST_MEMBER_SELECTION = new String[]{MediaStore.Audio.Playlists.Members.AUDIO_ID};
 
     private AudioFocusRequest mAFocusRequest;
 
@@ -125,10 +120,10 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     private ContentResolver mContentResolver;
 
     // Data
-    /** List of All Music from shared storage **/
-    @NonNull private final List<MediaBrowserCompat.MediaItem> mSharedStorageMedia = new ArrayList<>();
+    /** cache for onLoadChildren **/
+    @NonNull private final List<MediaBrowserCompat.MediaItem> mSharedStorageAudio = new ArrayList<>();
     /** key - String representation of the uri ; value - Corresponding playable MediaItem **/
-    private final HashMap<String, MediaBrowserCompat.MediaItem> mSharedStorageMusicMap = new HashMap<>();
+    private final HashMap<String, MediaBrowserCompat.MediaItem> mSharedStorageAudioMap = new HashMap<>();
 
     /** PlayList **/
     @NonNull private final List<MediaBrowserCompat.MediaItem> mAllPlayListMediaItem = new ArrayList<>();
@@ -138,6 +133,8 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     private PlaylistsDatabase mPlaylistsDatabase;
 
     private boolean mReciveTransportControlls;
+    
+    private Repositary.Observer mSSMObserver;
 
 
     /*  add low-memeory device varient  */
@@ -165,7 +162,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
         final String ID_LOCAL_MEDIA = getString(R.string.id_local_media);
         final String ID_LOCAL_PLAYLISTS = getString(R.string.id_local_playlists);
         if(parentId.equals(ID_LOCAL_MEDIA)){
-            result.sendResult(mSharedStorageMedia);
+            result.sendResult(mSharedStorageAudio);
         } else if(parentId.equals(ID_LOCAL_PLAYLISTS)) {
             /* add async */
             result.sendResult(mAllPlayListMediaItem);
@@ -173,10 +170,10 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
             result.sendResult(null);//Invalid parentId
         }
     }
+    
 
 
-
-    //  ____________________________ Service Callbacks ____________________________
+    // ____________________________ Service Callbacks ____________________________
 
     @Override
     public void onCreate() {
@@ -184,40 +181,30 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
 
         //_________ Loading DATA _________
 
-        if(mContentResolver==null)
-            mContentResolver = getContentResolver();
-        /*     ***OVERRIDE ALL METHODES FOR COMPATABILITY***    */
-        mInternalContentObserver = new ContentObserver(null) {
+        mRepositary = new Repositary(getApplicationContext());
+        mSSMObserver = new Repositary.Observer(){
             @Override
-            public void onChange(boolean selfChange) {
-                Log.i(LT.IP , LT.TEMP_IMPLEMENTATION+"___INTERENAL DATA CHANGED___");
+            public void onDataChanged(List<MediaBrowserCompat.MediaItem> mediaItems, int changeType){
+                mSharedStorageAudioMap.clear();
+                mSharedStorageAudio.clear();
+                for(MediaBrowserCompat.MediaItem mediaItem : mediaItems){
+                    mSharedStorageAudio.add(mediaItem);
+                    mSharedStorageAudioMap.put(mediaItem.getMediaId(), mediaItem);
+                }
+                notifyChildrenChanged(getString(R.string.id_local_media), new Bundle(0));
             }
         };
-        mExternalContentObserver = new ContentObserver(null) {
-            @Override
-            public void onChange(boolean selfChange) {
-                Log.i(LT.IP , LT.TEMP_IMPLEMENTATION+"___EXTERNAL DATA CHANGED___");
-            }
-        };
-        mContentResolver.registerContentObserver(MediaStore.Audio.Media.INTERNAL_CONTENT_URI,
-                /*check this arg*/false, mInternalContentObserver);
-        mContentResolver.registerContentObserver(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                /*check this arg*/false, mExternalContentObserver);
-
-        mSharedStorageMedia.addAll(mLoadSharedStorageMedia(MediaStore.Audio.Media.INTERNAL_CONTENT_URI,
-                mSharedStorageMusicMap));
-        Log.w(TAG, LT.UNIMPLEMENTED+"add toggle button for disabling local media");
-        mSharedStorageMedia.addAll(mLoadSharedStorageMedia(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                mSharedStorageMusicMap));
-
-        if(mPlaylistsDatabase==null){
+        mRepositary.setSharedStorageMediaObserver(mSSMObserver);
+        mRepositary.loadSharedStorageMedia();
+        
+        /*if(mPlaylistsDatabase==null){
             mPlaylistsDatabase = Room.databaseBuilder(getApplicationContext(),
                     PlaylistsDatabase.class, "playlists_database").build();
             mRepositary = new Repositary(mPlaylistsDatabase);
             //mRepositary.loadRepository();
         }
 
-        mRepositary.subscribePlaylistData(this::onDataChanged);
+        mRepositary.subscribePlaylistData(this::onDataChanged);*/
 
 
         //________________________________
@@ -233,13 +220,13 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
             @Override
             public void onPlayFromMediaId(String mediaId, Bundle extras) {
                 //rewrite
-                if ((mIsStringEmpty(mediaId)) || (!mSharedStorageMusicMap.containsKey(mediaId))){
+                if ((mIsStringEmpty(mediaId)) || (!mSharedStorageAudioMap.containsKey(mediaId))){
                     Log.w(ServiceMediaPlayback.this.getClass().getCanonicalName(),
                             LT.TEMP_IMPLEMENTATION+"try to handle invalid mediaId without throwing exception");
                     throw new IllegalArgumentException("invalid mediaId");
                 }
 
-                MediaBrowserCompat.MediaItem mediaItem = mSharedStorageMusicMap.get((String) mediaId);
+                MediaBrowserCompat.MediaItem mediaItem = mSharedStorageAudioMap.get((String) mediaId);
 
                 if(mediaItem.isBrowsable()){
                     //Handle various MediaItem like playlist by data in MediaItem bundle
@@ -387,7 +374,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                     for(int i=0; i<windowCount; i++){
                         Timeline.Window window = timeline.getWindow(i, new Timeline.Window());
                         MediaBrowserCompat.MediaItem mediaItem =
-                                mSharedStorageMusicMap.get(window.mediaItem.mediaId);
+                                mSharedStorageAudioMap.get(window.mediaItem.mediaId);
                         if(mediaItem != null)
                             queue.add(new MediaSessionCompat.QueueItem(mediaItem.getDescription(), i));
                         else Log.e(TAG, "onTimelineChanged ,mediaItem doesn't exist on map");
@@ -407,7 +394,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                 Log.w(TAG, LT.TEMP_IMPLEMENTATION+"check if metadata is updated preperly");
                 if (mediaItem != null) {
                     MediaBrowserCompat.MediaItem mediaItem1 =
-                            mSharedStorageMusicMap.get(mediaItem.mediaId);
+                            mSharedStorageAudioMap.get(mediaItem.mediaId);
                     final MediaDescriptionCompat md = mediaItem1.getDescription();
                     int albumArtSize = getResources().getDimensionPixelSize(R.dimen.player_main_albumart_sides);
                     final Uri albumArtUri = md.getMediaUri(); Bitmap albumArt = null;
@@ -554,8 +541,8 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
 
     @Override
     public void onDestroy() {
-        mRepositary.unsubscribePlaylistData(this::onDataChanged);
-        mRepositary.updateDatabaseAndRelease();
+        //mRepositary.unsubscribePlaylistData(this::onDataChanged);
+        mRepositary.stop();
 
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if(mAFocusRequest!=null) audioManager.abandonAudioFocusRequest(mAFocusRequest);
@@ -580,6 +567,10 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     @Override
     public void onCustomAction(@NonNull String action, Bundle extras, @NonNull Result<Bundle> result) {
         switch (action){
+            case ACTION_INCLUDE_INTERNAL_STOARAGE:
+                boolean include = extras.getBoolean(CADK_INCLUDE_INTERNAL_STORAGE_BOOLEAN, false);
+                mRepositary.includeInternalStorage(include);
+                return;
             case ACTION_REMOVE_QUEUE_ITEM:
                 final int queueId = (int)extras.getInt(CADK_QUEUE_ID, -2);
                 try{
@@ -608,129 +599,6 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     }
 
     // _____________________________________________________________________________
-
-    /**
-     * @param uri the uri to query
-     * @param hashMap puts the result into the map if NonNull
-     * @return null in case of error
-     * **/
-    @Nullable
-    private List<MediaBrowserCompat.MediaItem> mLoadSharedStorageMedia(
-            @NonNull Uri uri , @Nullable HashMap<String,MediaBrowserCompat.MediaItem> hashMap)
-            throws IllegalArgumentException{
-        if(uri==null) throw new IllegalArgumentException("uri can't be null");
-        // *** use IS_MUSIC constant
-        Cursor localMediaCursor = ContentResolverCompat.query( getContentResolver(),
-                        uri ,
-                        LOCAL_MEDIA_QUERY_PROJECTION,
-                        null,/*add*/
-                        null,/*add*/
-                        MediaStore.Audio.Media.DEFAULT_SORT_ORDER,
-                        null);
-
-        List<MediaBrowserCompat.MediaItem> localMediaItems = null;
-        if (localMediaCursor != null) {
-            if (localMediaCursor.moveToFirst()) {
-                //default values
-                final String defaultArtistName = getString(R.string.mediadescription_default_artist_name);
-                final String defaultGenreName = getString(R.string.mediadescription_default_genre_name);
-                final String defaultDuration = getString(R.string.mediadescription_default_duration);
-                final String defaultDisplayName = getString(R.string.mediadescription_default_display_name);
-                //_____________
-
-                localMediaItems = new ArrayList<>();
-                boolean appendToMap = false;
-                if(hashMap!=null) appendToMap = true;
-                int i = 0;
-                do {
-                    long id = localMediaCursor
-                            .getLong(localMediaCursor.getColumnIndex(MediaStore.Audio.Media._ID));
-                    Uri mediaUri = ContentUris.withAppendedId(uri,id);
-                    String mediaId = mediaUri.toString();
-                    String displayName = localMediaCursor.
-                            getString(localMediaCursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
-                    if(mIsStringEmpty(displayName)) displayName = defaultDisplayName;
-
-                    MediaDescriptionCompat mediaDescription =
-                            mMakeMediaDescriptor(mediaUri , mediaId , displayName, defaultArtistName,
-                                    defaultGenreName, defaultDuration);
-                    if (mediaDescription == null){
-                        i++;//skip this element
-                        continue;
-                    }
-                    MediaBrowserCompat.MediaItem mediaItem =
-                            new MediaBrowserCompat.MediaItem(mediaDescription, MediaBrowserCompat.MediaItem.FLAG_PLAYABLE);
-
-                    localMediaItems.add( mediaItem );
-                    if(appendToMap) hashMap.put(mediaId , mediaItem);
-
-                    i++;
-                } while (localMediaCursor.moveToNext());
-
-                localMediaCursor.close(); localMediaCursor = null;
-            }
-        } else {    /*  else no media   */
-            Toast.makeText( ServiceMediaPlayback.this , "cant load data(Replace with dialouge asking to retry)",
-                    Toast.LENGTH_SHORT).show();    //replace with dialouge
-        }
-        return localMediaItems;
-    }
-
-    /*Replace with MediaStore Way*/
-    @Nullable
-    private MediaDescriptionCompat mMakeMediaDescriptor(@NonNull Uri uri,
-                                                        @NonNull String mediaId,
-                                                        String displayName,
-                                                        String defaultArtistName,
-                                                        String defaultGenre,
-                                                        String defaultDuration) {
-        Log.w(LT.IP , LT.INEFFICIENT+"check if this can be improved");
-        Log.w(LT.IP, LT.UNIMPLEMENTED+"add appropriate name if any data is empty");
-        if(uri==null || mediaId==null) return null;
-
-        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-        Log.w(LT.IP, LT.TEMP_IMPLEMENTATION+"Replace MediaMetadataRetriever with MediaStore Way");
-        try {
-            mediaMetadataRetriever.setDataSource(getApplicationContext(), uri);
-        } catch (Exception e) {
-            return null;
-        }
-
-        String stringGenre = mediaMetadataRetriever
-                .extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE);
-        String stringArtist = mediaMetadataRetriever
-                .extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-        String durationString = mediaMetadataRetriever
-                .extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        mediaMetadataRetriever.release();
-        Log.w(LT.IP, "mMakeMediaDescriptor, check duration is right duration");
-
-        if(mIsStringEmpty(stringGenre)) stringGenre = defaultGenre;
-        if(mIsStringEmpty(stringArtist)) stringArtist = defaultArtistName;
-        if(mIsStringEmpty(durationString)) durationString = defaultDuration;
-        final Bundle extras = new Bundle(3);
-        extras.putString(MEDIA_DESCRIPTION_KEY_ARTIST, stringArtist);
-        extras.putString(MEDIA_DESCRIPTION_KEY_DURATION, durationString);
-        extras.putString(MEDIA_DESCRIPTION_KEY_GENRE, stringGenre);
-
-        Bitmap bitMapThumbNail = null;
-        //Note : Extend it to support various screen sizes
-        //Make Sure this doesnt take too much memory
-        Log.w(LT.IP, "ThumbNail Loader code");
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                bitMapThumbNail = getContentResolver()
-                        .loadThumbnail(uri, new Size(THUMBNAIL_SIDES, THUMBNAIL_SIDES), null);
-            } else {
-                Log.e(LT.IP, LT.UNIMPLEMENTED+"mMakeMediaDescriptor");
-            }
-        } catch (IOException e) {
-            //do nothing finally does the job
-        }
-        return mMediaDiscriptionBuilder.setTitle(displayName)
-                .setMediaId(mediaId).setMediaUri(uri).setIconBitmap(bitMapThumbNail).setExtras(extras)
-                .build();
-    }
 
     @Nullable
     private MediaBrowserCompat.MediaItem mMakeBrowsableMediaItem( @NonNull String mediaId )  {
@@ -778,19 +646,20 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
         }
     }
 
-    @Override
+    /*@Override
     public void onDataChanged(List<MediaBrowserCompat.MediaItem> mediaItems, int changeType) {
         //TODO : use change type
         mAllPlayListMediaItem.clear();
         mAllPlayListMediaItem.addAll(mediaItems);
         notifyChildrenChanged(getString(R.string.id_local_playlists), new Bundle(0));
-    }
+    }*/
 
     @Override
     public void onAudioFocusChange(int focusChange) {
         Log.w(TAG, LT.UNIMPLEMENTED);
     }
-
+    
+    /* util methods */
     private boolean mIsStringEmpty(@Nullable String s){
         return s==null || s.isEmpty();
     }
