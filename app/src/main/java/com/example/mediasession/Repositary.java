@@ -71,7 +71,7 @@ class Repositary {
     private final List<MediaBrowserCompat.MediaItem> mSSMExternal = new ArrayList<>();
     private final List<MediaBrowserCompat.MediaItem> mSSMInternal = new ArrayList<>();    
     
-    private final Object SHARED_STORAGE_LOCK = new Object();
+    private final Object SHARED_STORAGE_LOADING_LOCK = new Object();
     private final Object SHARED_STORAGE_UPDATE_LOCK = new Object();
     
     private boolean mIncludeInternalSSM;/* false by default */
@@ -104,11 +104,15 @@ class Repositary {
     }
     
     static interface OnLoadedCallback{
-        public abstract void onLoaded(List<MediaBrowserCompat.MediaItem> updatedData);
+        void onLoaded(List<MediaBrowserCompat.MediaItem> updatedData);
+    }
+    
+    static final enum ErrorLocation{
+        INTERNAL, EXTERNAL, ALL;
     }
     
     static interface Observer{
-        public abstract void onDataChanged(List<MediaBrowserCompat.MediaItem> mediaItems, int changeType);
+        void onDataChanged(@Nullable List<MediaBrowserCompat.MediaItem> mediaItems, @Nullable ErrorLocation[] cantLoad);
     }
     
     /** includes/excludes shared storage in internal storage **/
@@ -165,15 +169,14 @@ class Repositary {
     
     /** loads/reloads and updates shared storage media **/
     void loadSharedStorageMedia(){
-        //setup content observer if null
-        //load data async and update observers on loaded
-        
         /* TODO : check add proper content observer */
         /* TODO : OVERRIDE ALL METHODES FOR COMPATABILITY */
         if(mInternalContentObserver == null){
             mInternalContentObserver = new ContentObserver(null) {
                 @Override public void onChange(boolean selfChange) {
                     Log.i(TAG , "___INTERENAL DATA CHANGED___");
+                    
+                    if(!mIncludeInternalSSM) return;
                     
                     List<MediaBrowserCompat.MediaItem> internalMediaItems = mGetSharedStorageMedia(mSharedStorageInternalUri);
                     if(internalMediaItems != null){
@@ -182,14 +185,15 @@ class Repositary {
                         List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
                         mediaItems.addAll(mSSMExternal);
                         mediaItems.addAll(mSSMInternal);
-                        mUpdateSharedStorageMediaObserver(mediaItems, 0);
+                        mUpdateSSMObserver(mediaItems, 0);
                     } else {
-                        //TODO : notify error
-                        mUpdateSharedStorageMediaObserver(null, 0);
+                        //TODO : notify error properly
+                        mUpdateSSMObserver(null, 0);
                     }
                 }
             };
-            
+            mContentResolver.registerContentObserver(mSharedStorageInternalUri,
+                /*check this arg*/false, mInternalContentObserver);
         }
         if(mExternalContentObserver == null){
             mExternalContentObserver = new ContentObserver(null) {
@@ -203,54 +207,68 @@ class Repositary {
                         List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
                         mediaItems.addAll(mSSMExternal);
                         mediaItems.addAll(mSSMInternal);
-                        mUpdateSharedStorageMediaObserver(mediaItems, 0);
+                        mUpdateSSMObserver(mediaItems, 0);
                     } else {
-                        //TODO : notify error
-                        mUpdateSharedStorageMediaObserver(null, 0);
+                        //TODO : notify error properly
+                        mUpdateSSMObserver(null, 0);
                     }
                 }
             };
-        }
-        mContentResolver.registerContentObserver(mSharedStorageInternalUri,
-                /*check this arg*/false, mInternalContentObserver);
-        mContentResolver.registerContentObserver(mSharedStorageExternalUri,
+            mContentResolver.registerContentObserver(mSharedStorageExternalUri,
                 /*check this arg*/false, mExternalContentObserver);
+        }
         
-        synchronized(SHARED_STORAGE_LOCK){
+        synchronized(SHARED_STORAGE_LOADING_LOCK){
             new Thread(()->{
                 final List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList(0);
                 List<MediaBrowserCompat.MediaItem> externalMediaItems = mGetSharedStorageMedia(mSharedStorageExternalUri);
+                mSSMExternal.clear();
+                mSSMInternal.clear();
+                
                 if(externalMediaItems != null){
                     mSSMExternal.clear();
                     mSSMExternal.addAll(externalMediaItems);
                     mediaItems.addAll(externalMediaItems);
                 } else {
-                    //TODO : notify error
+                    //TODO : notify error properly
                 }
                 
-                if(!mIncludeInternalSSM){
-                    return;
-                } else {
-                    mSSMInternal.clear();
+                if(mIncludeInternalSSM) {
+                    List<MediaBrowserCompat.MediaItem> internalMediaItems = mGetSharedStorageMedia(mSharedStorageInternalUri);
+                    if(internalMediaItems != null){
+                        mSSMInternal.clear();
+                        mSSMInternal.addAll(internalMediaItems);
+                        mediaItems.addAll(internalMediaItems);
+                    } else {
+                        //TODO : notify error properly
+                    }
                 }
                 
-                List<MediaBrowserCompat.MediaItem> internalMediaItems = mGetSharedStorageMedia(mSharedStorageInternalUri);
-                if(internalMediaItems != null){
-                    mSSMInternal.clear();
-                    mSSMInternal.addAll(internalMediaItems);
-                    mediaItems.addAll(internalMediaItems);
-                } else {
-                    //TODO : notify error
-                }
-                mUpdateSharedStorageMediaObserver(mediaItems, 0);
+                mUpdateSSMObserver(mediaItems, 0);
             }).start();
         }
     }
     
-    private void mUpdateSharedStorageMediaObserver(List<MediaBrowserCompat.MediaItem> mediaItems, int changeType){
+    private void mUpdateSSMObserver(List<MediaBrowserCompat.MediaItem> externalMediaItems, List<MediaBrowserCompat.MediaItem> internalMediaItems, int changeType){
         synchronized(SHARED_STORAGE_UPDATE_LOCK){
-            if(mSharedStorageMediaObserver != null){
-                mSharedStorageMediaObserver.onDataChanged(mediaItems, changeType);
+            if(mSharedStorageMediaObserver == null) return;
+            
+            if(externalMediaItems == internalMediaItems == null){
+                mSharedStorageMediaObserver.onDataChanged(null, new ErrorLocation.ALL());
+            } else {
+                List<MediaBrowserCompat.MediaItem> allMediaItems = new ArrayList<>();
+                List<ErrorLocation> cantLoad = null;
+                if(externalMediaItems == null){
+                    cantLoad.add(new ErrorLocation.EXTERNAL());
+                } else {
+                    allMediaItems.addAll(externalMediaItems);
+                }
+                if(internalMediaItems == null){
+                    cantLoad.add(new ErrorLocation.INTERNAL());
+                } else {
+                    allMediaItems.addAll(externalMediaItems);
+                }
+                mSharedStorageMediaObserver.onDataChanged(allMediaItems, cantLoad);
             }
         }
     }
@@ -443,10 +461,9 @@ class Repositary {
         mDatabase = null;
     }
     
-    /* util methods */
-    private boolean mIsStringEmpty(@Nullable String s){
-        return s==null || s.isEmpty();
-    }
+    /* - - - - - - - - - - - - util methods - - - - - - - - - - - - - - - */
+    
+    private boolean mIsStringEmpty(@Nullable String s){ return s==null || s.isEmpty(); }
     
     //TODO : this is moved from ServiceMediaPlayback ,check 
     /*Replace with MediaStore Way*/
@@ -457,51 +474,52 @@ class Repositary {
                                                         String defaultArtistName,
                                                         String defaultGenre,
                                                         String defaultDuration) {
-        Log.w(LT.IP , LT.INEFFICIENT+"check if this can be improved");
-        Log.w(LT.IP, LT.UNIMPLEMENTED+"add appropriate name if any data is empty");
+        //TODO : optimize
         if(uri==null || mediaId==null) return null;
 
         MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-        Log.w(LT.IP, LT.TEMP_IMPLEMENTATION+"Replace MediaMetadataRetriever with MediaStore Way");
+        //TODO : Replace MediaMetadataRetriever with MediaStore Way
         try {
             mediaMetadataRetriever.setDataSource(mContext, uri);
         } catch (Exception e) {
             return null;
         }
 
-        String stringGenre = mediaMetadataRetriever
+        String genre = mediaMetadataRetriever
                 .extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE);
-        String stringArtist = mediaMetadataRetriever
+        String artist = mediaMetadataRetriever
                 .extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-        String durationString = mediaMetadataRetriever
+        String duration = mediaMetadataRetriever
                 .extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
         mediaMetadataRetriever.release();
-        Log.w(LT.IP, "mMakeMediaDescriptor, check duration is right duration");
+        //TODO : check duration is as expected
 
-        if(mIsStringEmpty(stringGenre)) stringGenre = defaultGenre;
-        if(mIsStringEmpty(stringArtist)) stringArtist = defaultArtistName;
-        if(mIsStringEmpty(durationString)) durationString = defaultDuration;
+        if(mIsStringEmpty(genre)) genre = defaultGenre;
+        if(mIsStringEmpty(artist)) artist = defaultArtistName;
+        if(mIsStringEmpty(duration)) duration = defaultDuration;
         final Bundle extras = new Bundle(3);
-        extras.putString(ServiceMediaPlayback.MEDIA_DESCRIPTION_KEY_ARTIST, stringArtist);
-        extras.putString(ServiceMediaPlayback.MEDIA_DESCRIPTION_KEY_DURATION, durationString);
-        extras.putString(ServiceMediaPlayback.MEDIA_DESCRIPTION_KEY_GENRE, stringGenre);
+        extras.putString(ServiceMediaPlayback.MEDIA_DESCRIPTION_KEY_ARTIST, artist);
+        extras.putString(ServiceMediaPlayback.MEDIA_DESCRIPTION_KEY_DURATION, duration);
+        extras.putString(ServiceMediaPlayback.MEDIA_DESCRIPTION_KEY_GENRE, genre);
 
-        Bitmap bitMapThumbNail = null;
-        //Note : Extend it to support various screen sizes
-        //Make Sure this doesnt take too much memory
-        Log.w(LT.IP, "ThumbNail Loader code");
+        Bitmap bitMapThumbnail = null;
+        /*
+        TODO : Extend it to support various screen sizes
+               Make Sure this doesnt take too much memory
+        */
+        
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                bitMapThumbNail = mContext.getContentResolver()
+                bitMapThumbnail = mContext.getContentResolver()
                         .loadThumbnail(uri, new Size(THUMBNAIL_SIDES, THUMBNAIL_SIDES), null);
             } else {
-                Log.e(LT.IP, LT.UNIMPLEMENTED+"mMakeMediaDescriptor");
+                //TODO : IMP : add thumbnail loader code for this api level
             }
         } catch (IOException e) {
-            //do nothing finally does the job
+            //do nothing
         }
         return mMediaDiscriptionBuilder.setTitle(displayName)
-                .setMediaId(mediaId).setMediaUri(uri).setIconBitmap(bitMapThumbNail).setExtras(extras)
+                .setMediaId(mediaId).setMediaUri(uri).setIconBitmap(bitMapThumbnail).setExtras(extras)
                 .build();
     }
 }
