@@ -57,22 +57,24 @@ class Repositary {
     private Context mContext;
     private ContentResolver mContentResolver;
     
+    //TODO : rename
     private Uri mSharedStorageExternalUri;
     private Uri mSharedStorageInternalUri;
     
     private ContentObserver mInternalContentObserver;
     private ContentObserver mExternalContentObserver;
     
-    private Repositary.Observer mSharedStorageMediaObserver;
+    //private Repositary.Observer mSharedStorageMediaObserver;
+    private Repositary.Observer mExternalSSMObserver;
+    private Repositary.Observer mInternalSSMObserver;
     private Repositary.Observer mPlaylistObserver;
 
-    //must be final
     /* SSM - shared storage media */
-    private final List<MediaBrowserCompat.MediaItem> mSSMExternal = new ArrayList<>();
-    private final List<MediaBrowserCompat.MediaItem> mSSMInternal = new ArrayList<>();    
+    private List<MediaBrowserCompat.MediaItem> mExternalSSA;
+    private List<MediaBrowserCompat.MediaItem> mInternalSSA;    
     
-    private final Object SHARED_STORAGE_LOADING_LOCK = new Object();
-    private final Object SHARED_STORAGE_UPDATE_LOCK = new Object();
+    private final Object LOADING_SHARED_STORAGE_LOCK = new Object();
+    private final Object OBSERVER_UPDATE_LOCK = new Object();
     
     private boolean mIncludeInternalSSM;/* false by default */
     
@@ -107,175 +109,114 @@ class Repositary {
         void onLoaded(List<MediaBrowserCompat.MediaItem> updatedData);
     }
     
-    static final enum ErrorLocation{
-        INTERNAL, EXTERNAL, ALL;
-    }
-    
     static interface Observer{
-        void onDataChanged(@Nullable List<MediaBrowserCompat.MediaItem> mediaItems, @Nullable ErrorLocation[] cantLoad);
+        void onDataChanged(@Nullable List<MediaBrowserCompat.MediaItem> mediaItems);
     }
     
-    /** includes/excludes shared storage in internal storage **/
-    void includeInternalStorage(boolean include){
-        mIncludeInternalSSM = include;
-    }
-    
-    /** @return null on error **/
     @Nullable
-    private List<MediaBrowserCompat.MediaItem> mGetSharedStorageMedia(@NonNull Uri uri) throws IllegalArgumentException {
+    private void mGetSharedStorageMedia(@NonNull Uri uri, Repositary.Observer observer, @Nullable List<MediaBrowserCompat.MediaItem> variable) throws IllegalArgumentException {
         if(uri==null) throw new IllegalArgumentException();
-        //TODO : use IS_MUSIC constant, fill the arguments with appropriate values
-        Cursor cursor = ContentResolverCompat.query(mContext.getContentResolver(),
-                uri ,
-                Repositary.LOCAL_MEDIA_QUERY_PROJECTION,
-                null,
-                null,
-                MediaStore.Audio.Media.DEFAULT_SORT_ORDER,
-                null);
-
-        if(cursor == null) {
-            Log.e(TAG, "cant load media for uri:"+uri.toString()+" , cursor is null");
-            return null;
-        }
-        final Resources res = mContext.getResources();
-        final List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
-        if (cursor.moveToFirst()) {
-            //default values
-            final String defaultArtistName = res.getString(R.string.mediadescription_default_artist_name);
-            final String defaultGenreName = res.getString(R.string.mediadescription_default_genre_name);
-            final String defaultDuration = res.getString(R.string.mediadescription_default_duration);
-            final String defaultDisplayName = res.getString(R.string.mediadescription_default_display_name);
-            //_____________
-
-            do {
-                long id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
-                Uri mediaUri = ContentUris.withAppendedId(uri,id);
-                String mediaId = mediaUri.toString();
-                String displayName = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
-                if(mIsStringEmpty(displayName)) displayName = defaultDisplayName;
-
-                MediaDescriptionCompat md = mMakeMediaDescriptor(mediaUri ,mediaId ,displayName, defaultArtistName, defaultGenreName, defaultDuration);/* rename mMakeMediaDescriptor method */
-                if (md == null){
-                    Log.e(TAG, "Method:mGetSharedStorageMedia can't make mediadescription, item skipped");
-                    continue;//skip this item
-                }
-                MediaBrowserCompat.MediaItem mediaItem = new MediaBrowserCompat.MediaItem(md, MediaBrowserCompat.MediaItem.FLAG_PLAYABLE);
-
-                mediaItems.add(mediaItem);
-            } while (cursor.moveToNext());
-        }    
-        return mediaItems;
-    }
-    
-    /** loads/reloads and updates shared storage media **/
-    void loadSharedStorageMedia(){
-        /* TODO : check add proper content observer */
-        /* TODO : OVERRIDE ALL METHODES FOR COMPATABILITY */
-        if(mInternalContentObserver == null){
-            mInternalContentObserver = new ContentObserver(null) {
-                @Override public void onChange(boolean selfChange) {
-                    Log.i(TAG , "___INTERENAL DATA CHANGED___");
-                    
-                    if(!mIncludeInternalSSM) return;
-                    
-                    List<MediaBrowserCompat.MediaItem> internalMediaItems = mGetSharedStorageMedia(mSharedStorageInternalUri);
-                    if(internalMediaItems != null){
-                        mSSMInternal.clear();
-                        mSSMInternal.addAll(internalMediaItems);
-                        List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
-                        mediaItems.addAll(mSSMExternal);
-                        mediaItems.addAll(mSSMInternal);
-                        mUpdateSSMObserver(mediaItems, 0);
-                    } else {
-                        //TODO : notify error properly
-                        mUpdateSSMObserver(null, 0);
-                    }
-                }
-            };
-            mContentResolver.registerContentObserver(mSharedStorageInternalUri,
-                /*check this arg*/false, mInternalContentObserver);
-        }
-        if(mExternalContentObserver == null){
-            mExternalContentObserver = new ContentObserver(null) {
-                @Override public void onChange(boolean selfChange) {
-                    Log.i(TAG, "___EXTERNAL DATA CHANGED___");
-                    
-                    List<MediaBrowserCompat.MediaItem> externalMediaItems = mGetSharedStorageMedia(mSharedStorageExternalUri);
-                    if(externalMediaItems != null){
-                        mSSMExternal.clear();
-                        mSSMExternal.addAll(externalMediaItems);
-                        List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
-                        mediaItems.addAll(mSSMExternal);
-                        mediaItems.addAll(mSSMInternal);
-                        mUpdateSSMObserver(mediaItems, 0);
-                    } else {
-                        //TODO : notify error properly
-                        mUpdateSSMObserver(null, 0);
-                    }
-                }
-            };
-            mContentResolver.registerContentObserver(mSharedStorageExternalUri,
-                /*check this arg*/false, mExternalContentObserver);
-        }
         
-        synchronized(SHARED_STORAGE_LOADING_LOCK){
-            new Thread(()->{
-                final List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList(0);
-                List<MediaBrowserCompat.MediaItem> externalMediaItems = mGetSharedStorageMedia(mSharedStorageExternalUri);
-                mSSMExternal.clear();
-                mSSMInternal.clear();
-                
-                if(externalMediaItems != null){
-                    mSSMExternal.clear();
-                    mSSMExternal.addAll(externalMediaItems);
-                    mediaItems.addAll(externalMediaItems);
-                } else {
-                    //TODO : notify error properly
-                }
-                
-                if(mIncludeInternalSSM) {
-                    List<MediaBrowserCompat.MediaItem> internalMediaItems = mGetSharedStorageMedia(mSharedStorageInternalUri);
-                    if(internalMediaItems != null){
-                        mSSMInternal.clear();
-                        mSSMInternal.addAll(internalMediaItems);
-                        mediaItems.addAll(internalMediaItems);
-                    } else {
-                        //TODO : notify error properly
+        //TODO : use IS_MUSIC constant, fill the arguments with appropriate values
+        //TODO : use different locks for internal/external , take that lock as a parameter
+        synchronized(LOADING_SHARED_STORAGE_LOCK){
+            final Runnable runnable = new Runnable(){
+                @Override
+                public void run(){
+                    Cursor cursor = ContentResolverCompat.query(mContext.getContentResolver(),
+                            uri ,
+                            Repositary.LOCAL_MEDIA_QUERY_PROJECTION,
+                            null,
+                            null,
+                            MediaStore.Audio.Media.DEFAULT_SORT_ORDER,
+                            null);
+
+                    if(cursor == null) {
+                        Log.e(TAG, "cant load media for uri:"+uri.toString()+" , cursor is null");
+                        mUpdateObserver(observer, variable, null);
                     }
+                    final Resources res = mContext.getResources();
+                    final List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
+                    if (cursor.moveToFirst()) {
+                        //default values
+                        final String defaultArtistName = res.getString(R.string.mediadescription_default_artist_name);
+                        final String defaultGenreName = res.getString(R.string.mediadescription_default_genre_name);
+                        final String defaultDuration = res.getString(R.string.mediadescription_default_duration);
+                        final String defaultDisplayName = res.getString(R.string.mediadescription_default_display_name);
+                        //_____________
+
+                        do {
+                            long id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
+                            Uri mediaUri = ContentUris.withAppendedId(uri,id);
+                            String mediaId = mediaUri.toString();
+                            String displayName = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
+                            if(mIsStringEmpty(displayName)) displayName = defaultDisplayName;
+
+                            MediaDescriptionCompat md = mMakeMediaDescriptor(mediaUri ,mediaId ,displayName, defaultArtistName, defaultGenreName, defaultDuration);/* rename mMakeMediaDescriptor method */
+                            if (md == null){
+                                Log.e(TAG, "Method:mGetSharedStorageMedia can't make mediadescription, item skipped");
+                                continue;//skip this item
+                            }
+                            MediaBrowserCompat.MediaItem mediaItem = new MediaBrowserCompat.MediaItem(md, MediaBrowserCompat.MediaItem.FLAG_PLAYABLE);
+
+                            mediaItems.add(mediaItem);
+                        } while (cursor.moveToNext());
+                    }
+        
+                    mUpdateObserver(observer, variable, mediaItems);
                 }
-                
-                mUpdateSSMObserver(mediaItems, 0);
-            }).start();
+            };
+            (new Thread(runnable)).start();
         }
     }
     
-    private void mUpdateSSMObserver(List<MediaBrowserCompat.MediaItem> externalMediaItems, List<MediaBrowserCompat.MediaItem> internalMediaItems, int changeType){
-        synchronized(SHARED_STORAGE_UPDATE_LOCK){
-            if(mSharedStorageMediaObserver == null) return;
-            
-            if(externalMediaItems == internalMediaItems == null){
-                mSharedStorageMediaObserver.onDataChanged(null, new ErrorLocation.ALL());
-            } else {
-                List<MediaBrowserCompat.MediaItem> allMediaItems = new ArrayList<>();
-                List<ErrorLocation> cantLoad = null;
-                if(externalMediaItems == null){
-                    cantLoad.add(new ErrorLocation.EXTERNAL());
-                } else {
-                    allMediaItems.addAll(externalMediaItems);
-                }
-                if(internalMediaItems == null){
-                    cantLoad.add(new ErrorLocation.INTERNAL());
-                } else {
-                    allMediaItems.addAll(externalMediaItems);
-                }
-                mSharedStorageMediaObserver.onDataChanged(allMediaItems, cantLoad);
+    private void mUpdateObserver(@Nullable Repositary.Observer observer, @Nullable List<MediaBrowserCompat.MediaItem> variable, @Nullable List<MediaBrowserCompat.MediaItem> updatedList){
+        synchronized(OBSERVER_UPDATE_LOCK){
+            variable = updatedList;
+            if(observer != null){
+                observer.onDataChanged(updatedList);
             }
         }
+    } 
+    
+    /* @params observer null to remove observer */
+    void setExternalSSAObserver(@Nullable Repositary.Observer observer){
+        mExternalSSMObserver = observer;
+        if(observer == null) {
+            mExternalSSA = null;
+            mExternalContentObserver = null;
+        } else {
+            if(mExternalContentObserver != null){
+                /* TODO : check add proper content observer */
+                /* TODO : OVERRIDE ALL METHODES FOR COMPATABILITY */
+                mExternalContentObserver = new ContentObserver(null){
+                    @Override public void onChange(boolean selfChange) {
+                        mGetSharedStorageMedia(mSharedStorageExternalUri, mExternalSSMObserver, mExternalSSA);
+                    }
+                };
+            }
+            mGetSharedStorageMedia(mSharedStorageExternalUri, mExternalSSMObserver, mExternalSSA);
+        }
     }
     
-    void setSharedStorageMediaObserver(@NonNull Repositary.Observer observer){
-        if(observer == null) throw new IllegalArgumentException("argument observer can't be null");
-        mSharedStorageMediaObserver = observer;
+    /* @params observer null to remove observer */
+    void setInternalSSAObserver(@Nullable Repositary.Observer observer){
+        mInternalSSMObserver = observer;
+        if(observer == null) {
+            mInternalSSMObserver = null;
+            mInternalContentObserver = null;
+        } else {
+            if(mInternalContentObserver != null){
+                /* TODO : check add proper content observer */
+                /* TODO : OVERRIDE ALL METHODES FOR COMPATABILITY */
+                mInternalContentObserver = new ContentObserver(null){
+                    @Override public void onChange(boolean selfChange) {
+                        mGetSharedStorageMedia(mSharedStorageInternalUri, mInternalSSMObserver, mInternalSSA);
+                    }
+                };
+            }
+            mGetSharedStorageMedia(mSharedStorageInternalUri, mInternalSSMObserver, mInternalSSA);
+        }
     }
   
     void setPlaylistObserver(@NonNull Repositary.Observer observer){

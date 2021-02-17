@@ -184,7 +184,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
         mRepositary = new Repositary(getApplicationContext());
         mSSMObserver = new Repositary.Observer(){
             @Override
-            public void onDataChanged(List<MediaBrowserCompat.MediaItem> mediaItems, int changeType){
+            public void onDataChanged(List<MediaBrowserCompat.MediaItem> mediaItems){
                 mSharedStorageAudioMap.clear();
                 mSharedStorageAudio.clear();
                 for(MediaBrowserCompat.MediaItem mediaItem : mediaItems){
@@ -194,8 +194,9 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                 notifyChildrenChanged(getString(R.string.id_local_media), new Bundle(0));
             }
         };
-        mRepositary.setSharedStorageMediaObserver(mSSMObserver);
-        mRepositary.loadSharedStorageMedia();
+        mRepositary.setExternalSSAObserver(mSSMObserver);
+        
+        //TODO : optionally load internal shared storage media
         
         /*if(mPlaylistsDatabase==null){
             mPlaylistsDatabase = Room.databaseBuilder(getApplicationContext(),
@@ -569,7 +570,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
         switch (action){
             case ACTION_INCLUDE_INTERNAL_STOARAGE:
                 boolean include = extras.getBoolean(CADK_INCLUDE_INTERNAL_STORAGE_BOOLEAN, false);
-                mRepositary.includeInternalStorage(include);
+                //TODO - IMP : try observing the shared preference ,if can remove this from custom action
                 return;
             case ACTION_REMOVE_QUEUE_ITEM:
                 final int queueId = (int)extras.getInt(CADK_QUEUE_ID, -2);
