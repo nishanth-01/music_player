@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContentResolverCompat;
 import androidx.media.MediaBrowserServiceCompat;
+import androidx.room.Room;
 
 import com.example.mediasession.annotations.Unsatisfied;
 import com.example.mediasession.room.PlaylistEntity;
@@ -41,6 +42,8 @@ import java.util.List;
 /** this class should only used by one service**/
 class Repositary {
     static final String TAG = "Repositary";
+    
+    static final String PLAYLISTS_DATABASE_NAME = "playlist_database";
     
     private final int THUMBNAIL_SIDES = 60;//TODO : change it based on screen size
 
@@ -65,13 +68,9 @@ class Repositary {
     private ContentObserver mExternalContentObserver;
     
     //private Repositary.Observer mSharedStorageMediaObserver;
-    private Repositary.Observer mExternalSSMObserver;
-    private Repositary.Observer mInternalSSMObserver;
-    private Repositary.Observer mPlaylistObserver;
-
-    /* SSM - shared storage media */
-    private List<MediaBrowserCompat.MediaItem> mExternalSSA;
-    private List<MediaBrowserCompat.MediaItem> mInternalSSA;    
+    @Nullable private Repositary.Observer mExternalSSMObserver;
+    @Nullable private Repositary.Observer mInternalSSMObserver;
+    @Nullable private Repositary.Observer mPlaylistsObserver;    
     
     private final Object LOADING_SHARED_STORAGE_LOCK = new Object();
     private final Object OBSERVER_UPDATE_LOCK = new Object();
@@ -79,10 +78,9 @@ class Repositary {
     private boolean mIncludeInternalSSM;/* false by default */
     
     //TODO : switch to executors
-    //TODO : inefficient
     
-    private PlaylistsDatabase mDatabase;
-    private androidx.lifecycle.Observer<List<PlaylistEntity>> mDatabaseObserver;
+    private PlaylistsDatabase mPlaylistsDatabase;
+    private androidx.lifecycle.Observer<List<PlaylistEntity>> mPlaylistsDatabaseObserver;//warning : dont null it
     //TODO : use a map that doesnt allow repeated values
     private final HashMap<Integer, PlaylistEntity> mAllPlaylistEntityMap = new HashMap<>();
     private final MediaDescriptionCompat.Builder mMediaDescriptionBuilder = new MediaDescriptionCompat.Builder();
@@ -114,7 +112,7 @@ class Repositary {
     }
     
     @Nullable
-    private void mGetSharedStorageMedia(@NonNull Uri uri, Repositary.Observer observer, @Nullable List<MediaBrowserCompat.MediaItem> variable) throws IllegalArgumentException {
+    private void mGetSharedStorageMedia(@NonNull Uri uri, Repositary.Observer observer) throws IllegalArgumentException {
         if(uri==null) throw new IllegalArgumentException();
         
         //TODO : use IS_MUSIC constant, fill the arguments with appropriate values
@@ -133,7 +131,7 @@ class Repositary {
 
                     if(cursor == null) {
                         Log.e(TAG, "cant load media for uri:"+uri.toString()+" , cursor is null");
-                        mUpdateObserver(observer, variable, null);
+                        mUpdateObserver(observer, null);
                     }
                     final Resources res = mContext.getResources();
                     final List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
@@ -163,16 +161,15 @@ class Repositary {
                         } while (cursor.moveToNext());
                     }
         
-                    mUpdateObserver(observer, variable, mediaItems);
+                    mUpdateObserver(observer, mediaItems);
                 }
             };
             (new Thread(runnable)).start();
         }
     }
     
-    private void mUpdateObserver(@Nullable Repositary.Observer observer, @Nullable List<MediaBrowserCompat.MediaItem> variable, @Nullable List<MediaBrowserCompat.MediaItem> updatedList){
+    private void mUpdateObserver(@Nullable Repositary.Observer observer, @Nullable List<MediaBrowserCompat.MediaItem> updatedList){
         synchronized(OBSERVER_UPDATE_LOCK){
-            variable = updatedList;
             if(observer != null){
                 observer.onDataChanged(updatedList);
             }
@@ -183,19 +180,21 @@ class Repositary {
     void setExternalSSAObserver(@Nullable Repositary.Observer observer){
         mExternalSSMObserver = observer;
         if(observer == null) {
-            mExternalSSA = null;
+            mContentResolver.unregisterContentObserver(mExternalContentObserver);
             mExternalContentObserver = null;
         } else {
-            if(mExternalContentObserver != null){
+            if(mExternalContentObserver == null){
                 /* TODO : check add proper content observer */
                 /* TODO : OVERRIDE ALL METHODES FOR COMPATABILITY */
                 mExternalContentObserver = new ContentObserver(null){
                     @Override public void onChange(boolean selfChange) {
-                        mGetSharedStorageMedia(mSharedStorageExternalUri, mExternalSSMObserver, mExternalSSA);
+                        mGetSharedStorageMedia(mSharedStorageExternalUri, mExternalSSMObserver);
                     }
                 };
             }
-            mGetSharedStorageMedia(mSharedStorageExternalUri, mExternalSSMObserver, mExternalSSA);
+            mContentResolver.registerContentObserver(mSharedStorageExternalUri, /* TODO - IMP : check this arg */true, mExternalContentObserver);
+            
+            mGetSharedStorageMedia(mSharedStorageExternalUri, mExternalSSMObserver);
         }
     }
     
@@ -203,24 +202,52 @@ class Repositary {
     void setInternalSSAObserver(@Nullable Repositary.Observer observer){
         mInternalSSMObserver = observer;
         if(observer == null) {
-            mInternalSSMObserver = null;
+            mContentResolver.unregisterContentObserver(mInternalContentObserver);
             mInternalContentObserver = null;
         } else {
-            if(mInternalContentObserver != null){
+            if(mInternalContentObserver == null){
                 /* TODO : check add proper content observer */
                 /* TODO : OVERRIDE ALL METHODES FOR COMPATABILITY */
                 mInternalContentObserver = new ContentObserver(null){
                     @Override public void onChange(boolean selfChange) {
-                        mGetSharedStorageMedia(mSharedStorageInternalUri, mInternalSSMObserver, mInternalSSA);
+                        mGetSharedStorageMedia(mSharedStorageInternalUri, mInternalSSMObserver);
                     }
                 };
             }
-            mGetSharedStorageMedia(mSharedStorageInternalUri, mInternalSSMObserver, mInternalSSA);
+            mContentResolver.registerContentObserver(mSharedStorageInternalUri, /* TODO - IMP : check this arg */true, mInternalContentObserver);
+            
+            mGetSharedStorageMedia(mSharedStorageInternalUri, mInternalSSMObserver);
         }
     }
   
-    void setPlaylistObserver(@NonNull Repositary.Observer observer){
-        if(observer == null) throw new IllegalArgumentException("argument observer can't be null");
+    void setPlaylistsObserver(@Nullable Repositary.Observer observer){
+        mPlaylistsObserver = observer;
+        
+        if(mPlaylistsObserver != null){
+            if(mPlaylistsDatabase == null){
+                mPlaylistsDatabase = Room.databaseBuilder(mContext, PlaylistsDatabase.class, PLAYLISTS_DATABASE_NAME).build();
+            }
+            if(mPlaylistsDatabaseObserver == null){
+                mPlaylistsDatabaseObserver = new androidx.lifecycle.Observer<List<PlaylistEntity>>(){
+                    @Override
+                    public void onChanged(List<PlaylistEntity> playlists){
+                        //TODO - next : make mediaitems and notify observers
+                        if(mPlaylistsObserver == null) return;
+                        /*for(PlaylistEntity pe : playlists){
+                            
+                        }
+                        mPlaylistsObserver.onDataChanged();*/
+                    }
+                };
+            }
+            mPlaylistsDatabase.playlistDao().getAllPlaylists().observeForever(mPlaylistsDatabaseObserver);
+        } else {
+            try{
+                    mPlaylistsDatabase.playlistDao().getAllPlaylists().removeObserver(mPlaylistsDatabaseObserver);
+            } catch(Exception e){
+                //do nothing
+            }
+        }
     }
     
     void refresh(){
@@ -228,11 +255,7 @@ class Repositary {
     }
     //_______________
     
-    void loadRepository(){
-        mDatabase.playlistDao().getAllPlaylists().observeForever(mDatabaseObserver);
-
-    }
-
+    
     //TODO : return operation result
     void addPlaylists(@NonNull/*@NonEmpty*/ String playlistName,
                       @Nullable String description,
@@ -254,7 +277,7 @@ class Repositary {
         result.detach();
         final Runnable runnable = new Runnable() {
             @Override public void run() {
-                mDatabase.playlistDao().insertPlaylist(playlistEntity);
+                mPlaylistsDatabase.playlistDao().insertPlaylist(playlistEntity);
                 result.sendResult(null);
             }
         };
@@ -272,7 +295,7 @@ class Repositary {
             final Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
-                    mDatabase.playlistDao().removePlaylist(playlistEntity);
+                    mPlaylistsDatabase.playlistDao().removePlaylist(playlistEntity);
                     result.sendResult(null);
                 }
             };
@@ -307,7 +330,7 @@ class Repositary {
             synchronized (Repositary.this){
                 final Runnable runnable = new Runnable() {
                     @Override public void run() {
-                        mDatabase.playlistDao().updatePlaylist(entity);
+                        mPlaylistsDatabase.playlistDao().updatePlaylist(entity);
                         entity.numberOfSongs += 1;
                         result.sendResult(null);
                     }
@@ -338,7 +361,7 @@ class Repositary {
         synchronized (Repositary.this){
             final Runnable runnable = new Runnable() {
                 @Override public void run() {
-                    mDatabase.playlistDao().updatePlaylist(entity);
+                    mPlaylistsDatabase.playlistDao().updatePlaylist(entity);
                     entity.numberOfSongs -= 1;
                     result.sendResult(null);
                 }
@@ -389,17 +412,16 @@ class Repositary {
         t.add(observer);
     }
 
-    void stop(){
+    void clear(){
         //TODO :
         
-        mContentResolver.unregisterContentObserver(mExternalContentObserver);
-        mContentResolver.unregisterContentObserver(mInternalContentObserver);
         mContentResolver = null;
         mContext = null;
         
-        mDatabase.playlistDao().getAllPlaylists().removeObserver(mDatabaseObserver);
-        mDatabaseObserver = null;
-        mDatabase = null;
+        if(mPlaylistsDatabase != null ){
+            if(mPlaylistsDatabase.isOpen()) mPlaylistsDatabase.close();
+            mPlaylistsDatabase = null;
+        }
     }
     
     /* - - - - - - - - - - - - util methods - - - - - - - - - - - - - - - */

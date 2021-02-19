@@ -29,8 +29,6 @@ public class PlaylistEntity {
     @ColumnInfo(name = "member_uris", typeAffinity = ColumnInfo.TEXT)
     public String memberUris = "";
 
-    boolean mUpdated;
-
     //constructors
 
     public PlaylistEntity() {}
@@ -48,8 +46,4 @@ public class PlaylistEntity {
         this.numberOfSongs = numberOfSongs;
         this.memberUris = memberUris;
     }
-
-    public boolean getUpdatedStatus(){ return mUpdated; }
-
-    void setUpdatedStatus(boolean updated){ mUpdated = updated; }
 }

@@ -130,8 +130,6 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     @NonNull private final List<String> mAllPlayListName = new ArrayList<>();
     private Repositary mRepositary;
 
-    private PlaylistsDatabase mPlaylistsDatabase;
-
     private boolean mReciveTransportControlls;
     
     private Repositary.Observer mSSMObserver;
@@ -543,7 +541,10 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     @Override
     public void onDestroy() {
         //mRepositary.unsubscribePlaylistData(this::onDataChanged);
-        mRepositary.stop();
+        mRepositary.setPlaylistsObserver(null);
+        mRepositary.setInternalSSAObserver(null);
+        mRepositary.setExternalSSAObserver(null);
+        mRepositary.clear();
 
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if(mAFocusRequest!=null) audioManager.abandonAudioFocusRequest(mAFocusRequest);
