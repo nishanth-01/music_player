@@ -159,12 +159,13 @@ public class MainSharedViewModel extends AndroidViewModel {
                 public void onChildrenLoaded(@NonNull String parentId,
                                              @NonNull List<MediaBrowserCompat.MediaItem> children,
                                              @NonNull Bundle options) {
+                    //TODO : check bundle if its has the error flag notify it to activity
                     mAllLocalMediaMLD.setValue(children);
                 }
 
                 @Override
                 public void onError(@NonNull String parentId, @NonNull Bundle options) {
-                    Log.w(TAG, LT.UNIMPLEMENTED+"handle error");
+                    //TODO : handle error playlists
                 }
             };
         }
@@ -177,12 +178,13 @@ public class MainSharedViewModel extends AndroidViewModel {
                 public void onChildrenLoaded(@NonNull String parentId,
                                              @NonNull List<MediaBrowserCompat.MediaItem> children,
                                              @NonNull Bundle options) {
+                    //TODO : check bundle if its has the error flag notify it to activity
                     mAllPlaylistsMLD.setValue(children);
                 }
 
                 @Override
                 public void onError(@NonNull String parentId, @NonNull Bundle options) {
-                    Log.w(TAG, LT.UNIMPLEMENTED+"handle error playlists");
+                    //TODO : handle error
                 }
             };
         }
@@ -192,22 +194,39 @@ public class MainSharedViewModel extends AndroidViewModel {
         //add recents etc...
     }
 
-    void mSubscribePlaylistMember(@NonNull String playlistId, @NonNull MediaBrowserCompat.SubscriptionCallback callback)
+    void subscribePlaylistMember(@NonNull String playlistId, @NonNull MediaBrowserCompat.SubscriptionCallback callback)
             throws IllegalArgumentException {
         if(callback == null || playlistId == null) throw new IllegalArgumentException();
         mMediaBrowser.subscribe(playlistId, new Bundle(0), callback);
     }
 
-    void mUnsubscribePlaylistMember(@NonNull String playlistId,
+    void unsubscribePlaylistMember(@NonNull String playlistId,
                                     @NonNull MediaBrowserCompat.SubscriptionCallback callback)
             throws IllegalArgumentException {
         if(callback == null || playlistId == null) throw new IllegalArgumentException();
         mMediaBrowser.unsubscribe(playlistId, callback);
     }
 
-    void playFromMediaId(@NonNull String id, Bundle extras){
-        if(mMediaController!=null) mMediaController.getTransportControls().playFromMediaId(id, extras);
-        else Log.w(LT.IP, LT.UNIMPLEMENTED+"playFromMediaId, cant play");
+    void playFromMediaId(@NonNull /*TODO : @NonEmpty*/ String id, Bundle extras){
+        if(id == null || id.isEmpty()) {
+            Log.w(LT.IP, LT.UNIMPLEMENTED+"MainSharedViewModel:playFromMediaId, empty id");
+            return;//TODO : notify error to user "cant play media"
+        }
+
+        if(mMediaBrowser.isConnected() && mMediaController != null)
+            mMediaController.getTransportControls().playFromMediaId(id, extras);
+        else Log.w(LT.IP, LT.UNIMPLEMENTED+"playFromMediaId, cant play");//TODO : notify error to user
+    }
+
+    void playPlaylist(String playlistId){
+        if(mMediaBrowser.isConnected()) {
+            final Bundle extras = new Bundle(1);
+            extras.putString(ServiceMediaPlayback.CADK_PLAYLIST_ID, playlistId);
+
+            mMediaBrowser.sendCustomAction(ServiceMediaPlayback.ACTION_PLAY_PLAYLIST, extras, null);
+        } else {
+            //TODO : notify user "try again"
+        }
     }
 
     void addToQueue(MediaDescriptionCompat mediaDescription){
@@ -298,25 +317,27 @@ public class MainSharedViewModel extends AndroidViewModel {
                     new MediaBrowserCompat.CustomActionCallback() {
                         @Override
                         public void onProgressUpdate(String action, Bundle extras, Bundle data) {
-                            Log.w(TAG, LT.UNIMPLEMENTED+"addPlaylist onProgressUpdate");
+                            //TODO : notify error to caller
                         }
 
                         @Override
                         public void onResult(String action, Bundle extras, Bundle resultData) {
-                            Log.w(TAG, LT.UNIMPLEMENTED+"addPlaylist onResult");
+                            //TODO : notify error to caller
                         }
 
                         @Override
                         public void onError(String action, Bundle extras, Bundle data) {
-                            Log.w(TAG, LT.UNIMPLEMENTED+"addPlaylist onError");
+                            //TODO : notify error to caller
                         }
                     });
+        } else {
+            //TODO : notify error to caller
         }
     }
 
-    void removePlaylist(int playlistId){
+    void removePlaylist(String playlistId){
         final Bundle bundle = new Bundle(1);
-        bundle.putInt(ServiceMediaPlayback.CADK_PLAYLIST_ID, playlistId);
+        bundle.putInt(ServiceMediaPlayback.CADK_PLAYLIST_ID, Integer.valueOf(playlistId));
         mMediaBrowser.sendCustomAction(ServiceMediaPlayback.ACTION_REMOVE_PLAYLIST, bundle,
                 new MediaBrowserCompat.CustomActionCallback() {
                     @Override
@@ -331,60 +352,54 @@ public class MainSharedViewModel extends AndroidViewModel {
 
                     @Override
                     public void onError(String action, Bundle extras, Bundle data) {
-                        Log.w(TAG, LT.UNIMPLEMENTED+"removePlaylist onError");
+                        Log.e(TAG, LT.UNIMPLEMENTED+"removePlaylist onError");
                     }
                 });
     }
 
-    void addPlaylistMemeber(@NonNull MediaDescriptionCompat md) throws IllegalArgumentException {
-        if(md == null ) throw new IllegalArgumentException();
+    void addPlaylistMemeber(int playlistId, String memberId, 
+                            @NonNull MediaBrowserCompat.CustomActionCallback callBack) {
         if(mMediaBrowser.isConnected()){
-            final Bundle bundle = new Bundle(1);
-            bundle.putString(ServiceMediaPlayback.CADK_MEMBER_URI, md.getMediaUri().toString());
-            mMediaBrowser.sendCustomAction(ServiceMediaPlayback.ACTION_ADD_PLAYLIST_MEMBER, bundle,
-                    /* reuse this object, make it singleton */
-                    new MediaBrowserCompat.CustomActionCallback() {
-                        @Override
-                        public void onProgressUpdate(String action, Bundle extras, Bundle data) {
-                            Log.w(TAG, LT.UNIMPLEMENTED+"addPlaylistMemeber onProgressUpdate");
-                        }
-
-                        @Override
-                        public void onResult(String action, Bundle extras, Bundle resultData) {
-                            Log.w(TAG, LT.UNIMPLEMENTED+"addPlaylistMemeber onResult");
-                        }
-
-                        @Override
-                        public void onError(String action, Bundle extras, Bundle data) {
-                            Log.w(TAG, LT.UNIMPLEMENTED+"addPlaylistMemeber onError");
-                        }
-                    });
+            final Bundle bundle = new Bundle(2);
+            bundle.putInt(ServiceMediaPlayback.CADK_PLAYLIST_ID, playlistId);
+            bundle.putString(ServiceMediaPlayback.CADK_PLAYLIST_MEMBER_ID, memberId);
+            mMediaBrowser.sendCustomAction(
+                        ServiceMediaPlayback.ACTION_ADD_PLAYLIST_MEMBER, 
+                            bundle, callBack);
+        } else {
+            //TODO : Maybe show "try again later" to user
         }
     }
 
-    void removePlaylistMemeber(@NonNull MediaDescriptionCompat md) throws IllegalArgumentException {
-        if(md == null ) throw new IllegalArgumentException();
+    void removePlaylistMemeber(int playlistId, String memberId) {
+        if(memberId == null) {
+            //TODO : notify user "cant remove"
+            return;
+        }
         if(mMediaBrowser.isConnected()){
-            final Bundle bundle = new Bundle(1);
-            bundle.putString(ServiceMediaPlayback.CADK_MEMBER_URI, md.getMediaUri().toString());
-            mMediaBrowser.sendCustomAction(ServiceMediaPlayback.ACTION_ADD_PLAYLIST_MEMBER, bundle,
-                    /* reuse this object, make it singleton */
-                    new MediaBrowserCompat.CustomActionCallback() {
-                        @Override
-                        public void onProgressUpdate(String action, Bundle extras, Bundle data) {
-                            Log.w(TAG, LT.UNIMPLEMENTED+"addPlaylistMemeber onProgressUpdate");
-                        }
+            final Bundle bundle = new Bundle(2);
+            bundle.putInt(ServiceMediaPlayback.CADK_PLAYLIST_ID, playlistId);
+            bundle.putString(ServiceMediaPlayback.CADK_PLAYLIST_MEMBER_ID, memberId);
 
-                        @Override
-                        public void onResult(String action, Bundle extras, Bundle resultData) {
-                            Log.w(TAG, LT.UNIMPLEMENTED+"addPlaylistMemeber onResult");
-                        }
+            MediaBrowserCompat.CustomActionCallback callBack = new MediaBrowserCompat.CustomActionCallback() {
+                @Override
+                public void onProgressUpdate(String action, Bundle extras, Bundle data) {
+                    //TODO
+                }
 
-                        @Override
-                        public void onError(String action, Bundle extras, Bundle data) {
-                            Log.w(TAG, LT.UNIMPLEMENTED+"addPlaylistMemeber onError");
-                        }
-                    });
+                @Override
+                public void onResult(String action, Bundle extras, Bundle resultData) {
+                    //TODO
+                }
+
+                @Override
+                public void onError(String action, Bundle extras, Bundle data) {
+                    //TODO
+                }
+            };
+
+            mMediaBrowser.sendCustomAction(ServiceMediaPlayback.ACTION_REMOVE_PLAYLIST_MEMBER,
+                    bundle, callBack);
         }
     }
 
@@ -395,6 +410,7 @@ public class MainSharedViewModel extends AndroidViewModel {
 
     @Override
     protected void onCleared() {
+        //TODO
         Log.d(LT.IP, "MainSharedViewModel onCleared called");
         mMediaBrowser.disconnect();
         mMediaBrowser=null;mMediaController=null;

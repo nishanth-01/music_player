@@ -1,46 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#00000000"
-    android:clickable="true"
-    android:layout_gravity="center">
-
-    <EditText
-        android:id="@+id/edit_text"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:contentDescription="Playlist Name"
-        android:imeOptions="actionSend"
-        android:inputType="text | textAutoCorrect | textCapWords"
-        android:padding="20dp"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:tooltipText="Playlist Name"
-        android:maxLines="1"
-        android:lines="1"
-        android:hint="Playlist Name"
-
-        app:layout_constraintBottom_toTopOf="@+id/create_playlist"
-        app:layout_constraintEnd_toEndOf="@+id/create_playlist"
-        app:layout_constraintStart_toStartOf="@+id/create_playlist"
-        app:layout_constraintVertical_bias="0.35"
-        app:layout_constraintVertical_chainStyle="packed"
-        tools:text="Sample" />
-
-    <Button
-        android:id="@+id/create_playlist"
+    android:background="#AA000000">
+    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/main"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Create Playlist"
         android:padding="20dp"
+        android:background="@drawable/fragment_add_playlist_dialouge_bg"
+        android:layout_gravity="center">
 
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- TODO : try using it and fix  -->
+        <EditText
+            android:id="@+id/edit_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Playlist Name"
+            android:hint="Playlist Name"
+            android:textColorHint="@color/exo_gray"
+            android:imeOptions="actionSend"
+            android:inputType="text | textAutoCorrect | textCapWords"
+            android:lines="1"
+            android:maxLines="1"
+            android:padding="20dp"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:tooltipText="Playlist Name"
+
+            app:layout_constraintBottom_toTopOf="@+id/create_playlist"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            tools:text="Sample" />
+
+        <Button
+            android:id="@+id/create_playlist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:text="Create"
+            android:background="@drawable/name_it_later"
+
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/edit_text"
+            app:layout_constraintVertical_chainStyle="packed" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

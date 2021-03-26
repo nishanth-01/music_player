@@ -15,6 +15,8 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.mediasession.databinding.FragmentAddPlaylistDialougeBinding;
 
+//TODO : add ways to add add picture and description
+
 public class AddPlaylistDialougeFragment extends Fragment {
     static final String TAG = "AddPlaylistDialougeFragment";
 
@@ -37,8 +39,8 @@ public class AddPlaylistDialougeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         mLayoutBinding = FragmentAddPlaylistDialougeBinding.inflate(inflater, container, false);
-        Log.w(TAG, LT.IP+" AddPlaylistDialougeFragment onCreateView, "+
-                "configure edit textview dont allow new line char");
+        //TODO  AddPlaylistDialougeFragment onCreateView, configure edit textview dont allow new line char
+        mLayoutBinding.main.setOnClickListener(view -> /*do nothing*/{;});
         mLayoutBinding.getRoot().setOnClickListener(v -> mRemoveMe());
         mLayoutBinding.createPlaylist.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,10 +61,7 @@ public class AddPlaylistDialougeFragment extends Fragment {
     }
 
     @Override
-    public void onDestroy() {
-        mSharedVM = null;
-        super.onDestroy();
-    }
+    public void onDestroy() { super.onDestroy(); mSharedVM = null; }
 
     private void mRemoveMe(){
         final Context context = getContext();

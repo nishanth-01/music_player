@@ -47,6 +47,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+//TODO : add a loading implementation, keep the ui in sync with it
+
 public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements AudioManager.OnAudioFocusChangeListener{
     private static final String TAG = "ServiceMediaPlayback";
     /* move all declared constants and make sure they dont conflict */
@@ -57,30 +59,40 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     static final byte SERVICE_SUSPENDED = 1;
     /*this also  means that controllers are ready*/
     static final byte SERVICE_CONNECTED = 2;
+    
+    static final String KEY_FLAG_ERROR = "key_flag_error";
 
-    static final String MEDIA_DESCRIPTION_KEY_GENRE = "md_key_genre";
-    static final String MEDIA_DESCRIPTION_KEY_ARTIST = "md_key_artist";
-    static final String MEDIA_DESCRIPTION_KEY_DURATION = "md_key_duration";
+    /* MDEK - MediaDescription Extras Key */
+    static final String MDEK_GENRE = "md_key_genre";
+    static final String MDEK_ARTIST = "md_key_artist";
+    static final String MDEK_DURATION = "md_key_duration";
+    static final String MDEK_PLAYLIST_NAME = "md_key_playlist_name";
+    static final String MDEK_PLAYLIST_DESCRIPTION = "md_key_playlist_discription";
+    static final String MDEK_PLAYLIST_MEMBERS_URI = "md_key_playlist_members_uri";
+    static final String MDEK_PLAYLIST_DISPLAY_PICTURE = "md_key_playlist_display_picture";
 
     /* custom actions */
     static final String ACTION_ADD_PLAYLIST = "1";
-    static final String ACTION_REMOVE_PLAYLIST = "2";
-    static final String ACTION_REMOVE_QUEUE_ITEM = "3";
-    static final String ACTION_ADD_PLAYLIST_MEMBER = "4";
-    static final String ACTION_REMOVE_PLAYLIST_MEMBER = "5";
-    static final String ACTION_INCLUDE_INTERNAL_STOARAGE = "6";
+    static final String ACTION_PLAY_PLAYLIST = "2";
+    static final String ACTION_REMOVE_PLAYLIST = "3";
+    static final String ACTION_REMOVE_QUEUE_ITEM = "4";
+    static final String ACTION_ADD_PLAYLIST_MEMBER = "5";
+    static final String ACTION_REMOVE_PLAYLIST_MEMBER = "6";
+    static final String ACTION_INCLUDE_INTERNAL_STOARAGE = "7";
     
     /** CADK - Custom Action Data Key **/
     static final String CADK_QUEUE_ID = "01";
-    static final String CADK_MEMBER_URI = "02";
+    static final String CADK_PLAYLIST_MEMBER_ID = "02";
     static final String CADK_PLAYLIST_ID = "03";
     static final String CADK_PLAYLIST_NAME = "04";
     static final String CADK_INCLUDE_INTERNAL_STORAGE_BOOLEAN = "05";
 
     static final String EXTRAS_KEY_PLAYER_STATE = "exoplayer_state";
 
+    private ContentResolver mContentResolver;
     private ContentObserver mInternalContentObserver;
     private ContentObserver mExternalContentObserver;
+    
     private final String[] PLAYLIST_MEMBER_SELECTION = new String[]{MediaStore.Audio.Playlists.Members.AUDIO_ID};
 
     private AudioFocusRequest mAFocusRequest;
@@ -88,6 +100,9 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     /*Browsable MediaItem ID*/
     //add better key
     static final String ROOT_ID_ALL_CONTENT = "rootid_all_content##"; //Make it Random   -client browse content ON
+    
+    @NonNull private String mParentIdSSA;
+    @NonNull private String mParentIdPlaylists;
 
     //MediaSession Extras key
     static final String EXTRAS_KEY_PLAY_WHEN_READY = "playWhenReady";
@@ -117,22 +132,22 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
 
     @NonNull private final List<MediaBrowserCompat.MediaItem> mCollectionRootList = new ArrayList<>();
 
-    private ContentResolver mContentResolver;
-
     // Data
+    private Repositary mRepositary;
+    
     /** cache for onLoadChildren **/
     @NonNull private final List<MediaBrowserCompat.MediaItem> mSharedStorageAudio = new ArrayList<>();
     /** key - String representation of the uri ; value - Corresponding playable MediaItem **/
-    private final HashMap<String, MediaBrowserCompat.MediaItem> mSharedStorageAudioMap = new HashMap<>();
+    @NonNull private final HashMap<String, MediaBrowserCompat.MediaItem> mSharedStorageAudioMap = new HashMap<>();
 
     /** PlayList **/
-    @NonNull private final List<MediaBrowserCompat.MediaItem> mAllPlayListMediaItem = new ArrayList<>();
-    @NonNull private final List<String> mAllPlayListName = new ArrayList<>();
-    private Repositary mRepositary;
+    @NonNull private final List<MediaBrowserCompat.MediaItem> mPlaylists = new ArrayList<>();
+    @NonNull private final HashMap<String, List<MediaBrowserCompat.MediaItem>> mPlaylistMembersMap = new HashMap<>();
 
     private boolean mReciveTransportControlls;
     
     private Repositary.Observer mSSMObserver;
+    private Repositary.Observer mPlaylistsObserver;
 
 
     /*  add low-memeory device varient  */
@@ -146,7 +161,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
             return new BrowserRoot(ROOT_ID_ALL_CONTENT, null);
             //if controller only mode requested in Bundle rootHints give that
         } else {
-            return null;    //return different parent id
+            return null;
         }
     }
 
@@ -155,20 +170,18 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     @Override
     public void onLoadChildren(@NonNull String parentId,
                                @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
-        Log.w(TAG, LT.TEMP_IMPLEMENTATION+"add result.detach, result.sendError");
-        /*  change code which loads data on request  */
-        final String ID_LOCAL_MEDIA = getString(R.string.id_local_media);
-        final String ID_LOCAL_PLAYLISTS = getString(R.string.id_local_playlists);
-        if(parentId.equals(ID_LOCAL_MEDIA)){
+        //TODO : add result.detach, result.sendError, async stuff
+        /*  TODO : change code which loads data on request  */
+        if(parentId.equals(mParentIdSSA)){
             result.sendResult(mSharedStorageAudio);
-        } else if(parentId.equals(ID_LOCAL_PLAYLISTS)) {
-            /* add async */
-            result.sendResult(mAllPlayListMediaItem);
+        } else if(parentId.equals(mParentIdPlaylists)) {
+            result.sendResult(mPlaylists);
+        } else if(mPlaylistMembersMap.containsKey(parentId)){
+            result.sendResult(mPlaylistMembersMap.get(parentId));
         } else {
             result.sendResult(null);//Invalid parentId
         }
     }
-    
 
 
     // ____________________________ Service Callbacks ____________________________
@@ -176,6 +189,9 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     @Override
     public void onCreate() {
         super.onCreate();
+        
+        mParentIdSSA = getString(R.string.id_local_media);
+        mParentIdPlaylists = getString(R.string.id_local_playlists);
 
         //_________ Loading DATA _________
 
@@ -185,52 +201,61 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
             public void onDataChanged(List<MediaBrowserCompat.MediaItem> mediaItems){
                 mSharedStorageAudioMap.clear();
                 mSharedStorageAudio.clear();
+                if(mediaItems == null){
+                    final Bundle extras = new Bundle(1);
+                    extras.putBoolean(KEY_FLAG_ERROR, true);
+                    notifyChildrenChanged(mParentIdSSA, extras);
+                    return;
+                }
+                mSharedStorageAudio.addAll(mediaItems);
                 for(MediaBrowserCompat.MediaItem mediaItem : mediaItems){
-                    mSharedStorageAudio.add(mediaItem);
                     mSharedStorageAudioMap.put(mediaItem.getMediaId(), mediaItem);
                 }
-                notifyChildrenChanged(getString(R.string.id_local_media), new Bundle(0));
+                notifyChildrenChanged(mParentIdSSA, Bundle.EMPTY);
             }
         };
         mRepositary.setExternalSSAObserver(mSSMObserver);
         
         //TODO : optionally load internal shared storage media
-        
-        /*if(mPlaylistsDatabase==null){
-            mPlaylistsDatabase = Room.databaseBuilder(getApplicationContext(),
-                    PlaylistsDatabase.class, "playlists_database").build();
-            mRepositary = new Repositary(mPlaylistsDatabase);
-            //mRepositary.loadRepository();
-        }
 
-        mRepositary.subscribePlaylistData(this::onDataChanged);*/
+        mPlaylistsObserver = new Repositary.Observer(){
+            @Override
+            public void onDataChanged(List<MediaBrowserCompat.MediaItem> mediaItems){
+                //check previous implementation before writing
+                mPlaylists.clear();
+                if(mediaItems == null){
+                    final Bundle extras = new Bundle(1);
+                    extras.putBoolean(KEY_FLAG_ERROR, true);
+                    notifyChildrenChanged(mParentIdPlaylists, extras);
+                    return;
+                }
+                mPlaylists.addAll(mediaItems);
+                mLoadPlaylistMembers();
+                notifyChildrenChanged(mParentIdPlaylists, Bundle.EMPTY);
+            }
+        };
+        mRepositary.setPlaylistsObserver(mPlaylistsObserver);
 
 
         //________________________________
 
         // ____________MediaSession _______________
-        mMediaSession = new MediaSessionCompat( this , MEDIA_SESSION_DEBUGGER_ID);
+        mMediaSession = new MediaSessionCompat(this, MEDIA_SESSION_DEBUGGER_ID);
         mMediaSession.setCallback(new MediaSessionCompat.Callback() {
             @Override
             public void onCommand(String command, Bundle extras, ResultReceiver cb) {
-
+                super.onCommand(command, extras, cb);
             }
 
             @Override
             public void onPlayFromMediaId(String mediaId, Bundle extras) {
-                //rewrite
-                if ((mIsStringEmpty(mediaId)) || (!mSharedStorageAudioMap.containsKey(mediaId))){
-                    Log.w(ServiceMediaPlayback.this.getClass().getCanonicalName(),
-                            LT.TEMP_IMPLEMENTATION+"try to handle invalid mediaId without throwing exception");
-                    throw new IllegalArgumentException("invalid mediaId");
-                }
-
                 MediaBrowserCompat.MediaItem mediaItem = mSharedStorageAudioMap.get((String) mediaId);
 
-                if(mediaItem.isBrowsable()){
-                    //Handle various MediaItem like playlist by data in MediaItem bundle
-                    Log.w(LT.IP , "onPlayFromMediaId requested mediaItem is browsable");
-                } else if(mediaItem.isPlayable()){
+                if(mediaItem == null){
+                    //TODO : notify user error
+                    return;
+                }
+                if(mediaItem.isPlayable()){
                     mPlayer.clearMediaItems();
                     MediaItem exoMediaItem = mExoMediaItemBuilder
                             .setUri(mediaItem.getDescription().getMediaUri())
@@ -238,6 +263,8 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                     mPlayer.setMediaItem(exoMediaItem);
                     mPlayer.prepare();
                     mPlayer.setPlayWhenReady(true);
+                } else {
+                    Log.w(LT.IP , "onPlayFromMediaId requested mediaItem is browsable");
                 }
             }
 
@@ -550,8 +577,10 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
         if(mAFocusRequest!=null) audioManager.abandonAudioFocusRequest(mAFocusRequest);
 
         Log.d("ServiceMediaPlayback" , "onDestroy called");
-        mContentResolver.unregisterContentObserver(mInternalContentObserver);
-        mContentResolver.unregisterContentObserver(mExternalContentObserver);
+        if(mInternalContentObserver != null)
+            mContentResolver.unregisterContentObserver(mInternalContentObserver);
+        if(mExternalContentObserver != null)
+            mContentResolver.unregisterContentObserver(mExternalContentObserver);
         //Release Resources
         if (mPlayerNotification != null) mPlayerNotification.setPlayer(null);
 
@@ -569,33 +598,80 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     @Override
     public void onCustomAction(@NonNull String action, Bundle extras, @NonNull Result<Bundle> result) {
         switch (action){
-            case ACTION_INCLUDE_INTERNAL_STOARAGE:
+            case ACTION_INCLUDE_INTERNAL_STOARAGE: {
                 boolean include = extras.getBoolean(CADK_INCLUDE_INTERNAL_STORAGE_BOOLEAN, false);
                 //TODO - IMP : try observing the shared preference ,if can remove this from custom action
                 return;
-            case ACTION_REMOVE_QUEUE_ITEM:
-                final int queueId = (int)extras.getInt(CADK_QUEUE_ID, -2);
-                try{
+            }
+            case ACTION_REMOVE_QUEUE_ITEM: {
+                final int queueId = (int) extras.getInt(CADK_QUEUE_ID, -2);
+                try {
                     mPlayer.removeMediaItem(queueId);
-                } catch (Exception e){
-                    Log.w(LT.IP, LT.UNIMPLEMENTED+"onCustomAction cant remove queue item");
+                } catch (Exception e) {
+                    Log.w(LT.IP, LT.UNIMPLEMENTED + "onCustomAction cant remove queue item");
                     result.sendError(null);
                     return;
                 }
                 result.sendResult(null);
                 return;
+            }
+            case ACTION_PLAY_PLAYLIST : {
+                final String playlistId = extras.getString(CADK_PLAYLIST_ID, null);
+                if(playlistId == null){
+                    //TODO : notify error
+                    result.sendError(null);
+                    return;
+                }
 
-            case ACTION_ADD_PLAYLIST:
+                List<MediaBrowserCompat.MediaItem> mediaItems = null;
+                try {
+                    mediaItems = mPlaylistMembersMap.get(playlistId);
+                } catch (Exception e) { /* do nothing */ }
+
+                if(mediaItems != null) {
+                    result.sendResult(null);
+                    mPlayer.setPlayWhenReady(false);
+                    mPlayer.clearMediaItems();
+                    for(MediaBrowserCompat.MediaItem item : mediaItems) {
+                        MediaItem exoMediaItem = mExoMediaItemBuilder
+                                .setUri(item.getDescription().getMediaUri())
+                                .setMediaId(item.getMediaId()).build();
+                        mPlayer.addMediaItem(exoMediaItem);
+                    }
+                    mPlayer.prepare();
+                    mPlayer.setPlayWhenReady(true);
+                } else {
+                    //TODO : notify error
+                    result.sendError(null);
+                }
+
+                return;
+            }
+
+            case ACTION_ADD_PLAYLIST: {
                 final String addPlaylistName = extras.getString(CADK_PLAYLIST_NAME);
-                mRepositary.addPlaylists((addPlaylistName ==null ? "" : addPlaylistName),
+                mRepositary.addPlaylists((addPlaylistName == null ? "" : addPlaylistName),
                         null, null, result);
                 return;
+            }
 
-            case ACTION_REMOVE_PLAYLIST:
-                final int removePlaylistId = extras.getInt(CADK_PLAYLIST_ID, -1);
+            case ACTION_REMOVE_PLAYLIST: {
+                final int removePlaylistId = extras.getInt(CADK_PLAYLIST_ID, -2);
                 mRepositary.removePlaylist(removePlaylistId, result);
                 return;
-                //action add/remove member
+            }
+            case ACTION_ADD_PLAYLIST_MEMBER: {
+                int playlistId = extras.getInt(CADK_PLAYLIST_ID, -2);
+                String memberId = extras.getString(CADK_PLAYLIST_MEMBER_ID, "");
+                mRepositary.addPlaylistMember(playlistId, memberId, result);
+                return;
+            }
+            case ACTION_REMOVE_PLAYLIST_MEMBER: {
+                int playlistId = extras.getInt(CADK_PLAYLIST_ID, -2);
+                String memberId = extras.getString(CADK_PLAYLIST_MEMBER_ID, "");
+                mRepositary.removePlaylistMember(playlistId, memberId, result);
+                return;
+            }
             default: super.onCustomAction(action, extras, result);
         }
     }
@@ -606,6 +682,43 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     private MediaBrowserCompat.MediaItem mMakeBrowsableMediaItem( @NonNull String mediaId )  {
         MediaDescriptionCompat mediaDescription = mMediaDiscriptionBuilder.setMediaId(mediaId).build();
         return new MediaBrowserCompat.MediaItem(mediaDescription, MediaBrowserCompat.MediaItem.FLAG_BROWSABLE);
+    }
+    
+    private void mLoadPlaylistMembers(){
+        mPlaylistMembersMap.clear();
+    
+        if(mPlaylists == null){
+            //TODO : check and send error
+            return;
+        }
+        
+        for(MediaBrowserCompat.MediaItem playlist : mPlaylists){
+            List<String> membersUriList = playlist.getDescription().getExtras()
+                    .getStringArrayList(ServiceMediaPlayback.MDEK_PLAYLIST_MEMBERS_URI);
+                    
+            membersUriList = (membersUriList == null) ? new ArrayList<>(0) : membersUriList;
+            
+            final List<MediaBrowserCompat.MediaItem> members = new ArrayList<>();
+            //TODO : optimize
+            for(String s : membersUriList){
+                MediaBrowserCompat.MediaItem member = null;
+                try{
+                    member = mSharedStorageAudioMap.get(s);
+                } catch(Exception e){ /* do nothing */ }
+                if(member != null){
+                    members.add(member);
+                } else {
+                    /* TODO : add a mediaitem to notify user that this
+                        element is deleted, instead of skipping this element */
+                    continue;
+                }
+            }
+            String mediaId = playlist.getMediaId();
+            //TODO : check what is mediaId doesnt exist in notifyChildrenChanged
+            mPlaylistMembersMap.put(mediaId, members);
+            Log.d(TAG, "a"+members.toString());
+            notifyChildrenChanged(mediaId, Bundle.EMPTY);
+        }
     }
 
     //exoplayer handles the audio focus , see (SimpleExoPlayer Instance).setAudioAttributes
@@ -653,7 +766,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
         //TODO : use change type
         mAllPlayListMediaItem.clear();
         mAllPlayListMediaItem.addAll(mediaItems);
-        notifyChildrenChanged(getString(R.string.id_local_playlists), new Bundle(0));
+        notifyChildrenChanged(mParentIdPlaylists, Bundle.EMPTY);
     }*/
 
     @Override

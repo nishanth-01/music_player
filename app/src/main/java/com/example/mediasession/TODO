@@ -1,3 +1,19 @@
-switch use enum instead of constant int pattern
+use enum instead of constant int pattern
 
-finish shared storage media work in ServiceMediaPlayback
+popbackstack properly
+
+work on constant strings (use little unique keys)
+
+show bottom nav on playlists screen
+
+In MainSharedViewModel communicate with fragments with LiveData
+
+Make sure media id's are unique
+
+Fix - Back Press
+    - Load data in proper order handle data properly
+    - Notification
+
+DO  - add playlist data change observer to  PlaylistMembersFragment and handle data change properly
+    - add "add playlist" button to PlaylistSelectorFragment
+    - do error notification work

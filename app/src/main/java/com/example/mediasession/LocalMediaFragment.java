@@ -14,6 +14,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentResultListener;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -23,22 +25,72 @@ import com.example.mediasession.databinding.FragmentLocalMediaBinding;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LocalMediaFragment extends Fragment implements LocalMediaFragmentInterface{
+public class LocalMediaFragment extends Fragment implements ClickInterface {
     //TODO : notify user is list is empty
-    private static final String TAG = "LocalMediaFragment";
+    public static final String TAG = "LocalMediaFragment";
+    static final String PLAYLIST_SELECTOR_RESULT_KEY = "playlist_selector_result_key";
+    static final String PLAYLIST_SELECTOR_REQUEST_KEY = "playlist_selector_request_key";
+    
+    private FragmentManager mFragmentManger;
+    private FragmentResultListener mPlaylistSelectorResultListener;
     private FragmentLocalMediaBinding mLayout;
     private MainSharedViewModel mMainSharedVM;
     private final List<MediaBrowserCompat.MediaItem> mDataSet = new ArrayList<>();
+    
+    private String mSelectedItemId;
 
-    public LocalMediaFragment() {
-        super();
-    }
+    public LocalMediaFragment() { super(); }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mMainSharedVM = new ViewModelProvider(getActivity())
                 .get(MainActivity.MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
+                
+        mFragmentManger = getParentFragmentManager();
+        
+        mPlaylistSelectorResultListener = new FragmentResultListener(){
+            @Override
+            public void onFragmentResult(String requestKey, Bundle result){
+                switch(requestKey){
+                    case LocalMediaFragment.PLAYLIST_SELECTOR_REQUEST_KEY : {
+                        String playlistIdString = result.getString(PLAYLIST_SELECTOR_RESULT_KEY, "");
+                        int playlistId = 0;
+                        try{
+                            playlistId = Integer.valueOf(playlistIdString);
+                        } catch (NumberFormatException e){
+                            //TODO
+                        }
+                        
+                        if(mSelectedItemId != null){
+                            MediaBrowserCompat.CustomActionCallback callBack = new MediaBrowserCompat.CustomActionCallback() {
+                                @Override
+                                public void onProgressUpdate(String action, Bundle extras, Bundle data) {
+                                    Log.w(TAG, " addPlaylistMemeber onProgressUpdate");
+                                }
+                                @Override
+                                public void onResult(String action, Bundle extras, Bundle resultData) {
+                                    Log.w(TAG, " addPlaylistMemeber onResult");
+                                }
+    
+                                @Override
+                                public void onError(String action, Bundle extras, Bundle data) {
+                                    Log.w(TAG, " addPlaylistMemeber onError");
+                                }
+                            };
+                            mMainSharedVM.addPlaylistMemeber(playlistId, mSelectedItemId, callBack);
+                        } else {
+                            //TODO
+                        }
+                        
+                        mFragmentManger.clearFragmentResult(PLAYLIST_SELECTOR_RESULT_KEY);
+                        mFragmentManger.clearFragmentResultListener(PLAYLIST_SELECTOR_RESULT_KEY);
+                    }
+                    
+                    default : return;
+                }
+            }
+        };
     }
 
     @Nullable
@@ -51,14 +103,12 @@ public class LocalMediaFragment extends Fragment implements LocalMediaFragmentIn
                 new Observer<List<MediaBrowserCompat.MediaItem>>() {
                     @Override
                     public void onChanged(List<MediaBrowserCompat.MediaItem> mediaItems) {
-                        Log.w(LT.IP, LT.TEMP_IMPLEMENTATION+
-                                "handle empty media properly");
+                        //TODO : handle empty media properly
 
-                        Log.e(LT.IP , LT.TEMP_IMPLEMENTATION+ "handle data change properly," +
-                                "currently resets the adapter if data changed");
+                        //TODO : handle data change properly currently resets the adapter if data changed
                         mDataSet.clear(); mDataSet.addAll(mediaItems);
                         mLayout.mainList.setAdapter(new LocalMediaListAdapter(mDataSet,
-                                (LocalMediaFragmentInterface) LocalMediaFragment.this,
+                                (ClickInterface) LocalMediaFragment.this,
                                 CompatMethods.getDrawable(getResources(), R.drawable.ic_default_albumart_thumb, null)));
                     }
                 });
@@ -83,26 +133,33 @@ public class LocalMediaFragment extends Fragment implements LocalMediaFragmentIn
     public void onClick(View v) {
         //add timeout for each click
 
-        String mediaId = mGetDescriptionFromView(v).getMediaId();
-        if(mMainSharedVM!=null) mMainSharedVM.playFromMediaId(mediaId , null);
+        LocalMediaListAdapter.ViewHolder viewHolder =
+                (LocalMediaListAdapter.ViewHolder) mLayout.mainList.getChildViewHolder(v);
+        String mediaId = viewHolder.getMediaDescription().getMediaId();
+        if(mMainSharedVM != null) mMainSharedVM.playFromMediaId(mediaId, null);
+        //TODO : add else
     }
 
     @Override
-    public void onOptionsClick(View view) {
-        final MediaDescriptionCompat mediaDescription = mGetDescriptionFromView(view);
-        final View optionsView = view.findViewById(R.id.options);
-        PopupMenu popup = new PopupMenu(getContext(), optionsView);
+    public void onOptionsClick(View rootView, View anchor) {
+        LocalMediaListAdapter.ViewHolder viewHolder =
+                (LocalMediaListAdapter.ViewHolder) mLayout.mainList.getChildViewHolder(rootView);
+        final MediaDescriptionCompat md = viewHolder.getMediaDescription();
+        if(md == null) { /* TODO : notify error */return; }
+        mSelectedItemId = md.getMediaId();
+        PopupMenu popup = new PopupMenu(getContext(), anchor);
         MenuInflater inflater = popup.getMenuInflater();
-        inflater.inflate(R.menu.music_item, popup.getMenu());
+        inflater.inflate(R.menu.music_item_options, popup.getMenu());
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.music_item_menu_add_to_queue:
-                        mMainSharedVM.addToQueue(mediaDescription);
+                        mMainSharedVM.addToQueue(md);
                         return true;
                     case R.id.music_item_menu_add_to_playlist:
-                        mMainSharedVM.addPlaylistMemeber(mediaDescription);
+                        mShowPlaylistSelector();
+                        return true;
                     default:
                         return false;
                 }
@@ -110,11 +167,18 @@ public class LocalMediaFragment extends Fragment implements LocalMediaFragmentIn
         });
         popup.show();
     }
-
-    @Nullable
-    private MediaDescriptionCompat mGetDescriptionFromView(View v){
-        LocalMediaListAdapter.ThisViewHolder viewHolder =
-                (LocalMediaListAdapter.ThisViewHolder) mLayout.mainList.getChildViewHolder(v);
-        return viewHolder.getMediaDescription();
+    
+    private void mShowPlaylistSelector(){
+        mFragmentManger.setFragmentResultListener(
+                    LocalMediaFragment.PLAYLIST_SELECTOR_REQUEST_KEY, 
+                            this, mPlaylistSelectorResultListener);
+        
+        mFragmentManger.executePendingTransactions();
+        //TODO : try commit and commitNow
+        mFragmentManger.beginTransaction()
+                .addToBackStack(null)
+                .add(android.R.id.content, new PlaylistSelectorFragment(),
+                        PlaylistSelectorFragment.TAG)
+                .commit();
     }
 }

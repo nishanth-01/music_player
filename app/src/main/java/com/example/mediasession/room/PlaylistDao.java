@@ -12,7 +12,7 @@ import java.util.List;
 @Dao
 public interface PlaylistDao {
     @Query("SELECT * FROM PlaylistEntity")
-    LiveData<List<PlaylistEntity>> getAllPlaylists();
+    LiveData<List<PlaylistEntity>> getPlaylistsLD();
 
     //TODO : add onConflict
     //@Insert(onConflict = )

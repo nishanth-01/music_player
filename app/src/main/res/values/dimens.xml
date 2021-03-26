@@ -14,6 +14,7 @@
 
     <!-- values are related to each other check and change-->
     <!-- music_item -->
+    <!-- playlist_member_item also uses this values -->
     <dimen name="music_item_display_icon_sides">50dp</dimen>
     <dimen name="music_item_display_icon_margin">10dp</dimen>
     <dimen name="music_item_display_name_margin_s">4dp</dimen>
@@ -39,12 +40,12 @@
     <dimen name="queue_item_close_icon_padding">18dp</dimen>
 
     <!-- playlist item -->
-    <dimen name="playlist_item_image_size">70dp</dimen>
+    <dimen name="playlist_item_image_size">60dp</dimen>
     <dimen name="playlist_item_image_margin">10dp</dimen>
-    <dimen name="playlist_item_display_name_size">26sp</dimen>
+    <dimen name="playlist_item_display_name_size">23sp</dimen>
     <dimen name="playlist_item_display_name_margin_lr">@dimen/playlist_item_image_margin</dimen>
     <dimen name="playlist_item_no_of_songs_text_size">19sp</dimen>
     <dimen name="playlist_item_duration_text_padding">2dp</dimen>
     <dimen name="playlist_item_display_name_padding">2sp</dimen>
-    <dimen name="playlist_item_margin">3dp</dimen>
+    <dimen name="playlist_item_add_playlist_margin">6dp</dimen>
 </resources>

@@ -5,18 +5,10 @@
     android:layout_height="match_parent"
     android:background="@color/fragment_playlists_bg_color"
     xmlns:tools="http://schemas.android.com/tools">
+    
     <androidx.recyclerview.widget.RecyclerView android:id="@+id/main_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:listitem="@layout/playlist_item" />
-
-    <ImageButton android:id="@+id/add_playlist_button"
-        android:layout_width="@dimen/add_playlist_button_sides"
-        android:layout_height="@dimen/add_playlist_button_sides"
-        android:layout_margin="10dp"
-        android:background="#cccccc"
-        android:src="@drawable/ic_plus"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        
 </androidx.constraintlayout.widget.ConstraintLayout>

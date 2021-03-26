@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.os.Build;
@@ -98,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
         mMainSharedVM = new ViewModelProvider(this)
                 .get(MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
 
-        /*research more and add proper transperent status bar*/
+        /*TODO : research more and add proper transperent status bar*/
         /*Log.w(TAG ,
                 LT.TEMP_IMPLEMENTATION+"research more and add proper transperent status bar");
         View view = getWindow().getDecorView();
@@ -186,19 +187,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         setVolumeControlStream(AudioManager.STREAM_MUSIC); //TODO : check
-        /*Test what happens if app permission changes at runtime*/
+        /*TODO : Test what happens if app permission changes at runtime*/
     }
 
     @Override
     protected void onPause() {
         setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE); //TODO : check
         super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        //TODO : check if call due to orientation change if not UPDATE DATABASE
     }
 
     @Override
@@ -211,12 +206,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    @Override
-    public void onBackPressed() {
-        //TODO : if(mFragmentManager.getBackStackEntryCount() <= 0){ mShowExitConformationDialouge(); return; }
-        super.onBackPressed();
-    }
-// ___________________________________________________________________________________________
+    // ___________________________________________________________________________________________
     
     private void mUpdateMetadata(@NonNull MediaMetadataCompat metadata)
             throws IllegalArgumentException {
@@ -258,17 +248,23 @@ public class MainActivity extends AppCompatActivity {
 
     void mShowBN(boolean show){
         final boolean onScreen = mMainConstraintSet.getConstraint(R.id.main_bn_playlists)
-                .layout.bottomToBottom == ConstraintSet.PARENT_ID;
+                    .layout.bottomToBottom == ConstraintSet.PARENT_ID;
         if(show){
             if(onScreen) return;
             mMainConstraintSet.connect(R.id.main_bn_playlists, ConstraintSet.BOTTOM,
                     ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
+            mMainConstraintSet.clear(R.id.main_bn_playlists, ConstraintSet.TOP);
             mMainConstraintSet.applyTo(mLayoutBinding.getRoot());
+            
+            Toast.makeText(this, "mShowBN(true)", Toast.LENGTH_LONG);
         } else {
             if(!onScreen) return;
             mMainConstraintSet.connect(R.id.main_bn_playlists, ConstraintSet.TOP,
                     ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
+            mMainConstraintSet.clear(R.id.main_bn_playlists, ConstraintSet.BOTTOM);
             mMainConstraintSet.applyTo(mLayoutBinding.getRoot());
+            
+            Toast.makeText(this, "mShowBN(true)", Toast.LENGTH_LONG);
         }
     }
 

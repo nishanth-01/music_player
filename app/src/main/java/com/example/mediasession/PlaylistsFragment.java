@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
@@ -25,9 +26,8 @@ public class PlaylistsFragment extends Fragment implements PlaylistsAdapterInter
     private FragmentPlaylistsBinding mLayoutBinding;
     private MainSharedViewModel mSharedViewModel;
 
-    public PlaylistsFragment() {
-        super();
-    }
+    public PlaylistsFragment() { super(); }
+    
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,20 +41,15 @@ public class PlaylistsFragment extends Fragment implements PlaylistsAdapterInter
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         mLayoutBinding = FragmentPlaylistsBinding.inflate(inflater, container, false);
-        mLayoutBinding.addPlaylistButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mShowAddPlaylistDialouge();
-            }
-        });
         mLayoutBinding.mainList.setLayoutManager(new LinearLayoutManager(getContext()));
         mSharedViewModel.getPlaylistsLD().observe(this,
                 new Observer<List<MediaBrowserCompat.MediaItem>>() {
                     @Override
                     public void onChanged(List<MediaBrowserCompat.MediaItem> mediaItems) {
+                        //TODO : handle data change without setting a new adapter
                         mLayoutBinding.mainList.setAdapter(new PlaylistsAdapter(mediaItems,
                                 PlaylistsFragment.this,
-                                CompatMethods.getDrawable(getResources(),
+                                ResourcesCompat.getDrawable(getResources(),
                                         R.drawable.ic_default_albumart_thumb, null)));
                     }
                 });
@@ -63,20 +58,18 @@ public class PlaylistsFragment extends Fragment implements PlaylistsAdapterInter
 
     @Override
     public void onDestroyView() {
-        mSharedViewModel.getPlaylistsLD().removeObservers(this);
+        super.onDestroyView();
         mLayoutBinding.mainList.setAdapter(null);
         mLayoutBinding.mainList.setLayoutManager(null);
-        super.onDestroyView();
     }
 
     @Override
-    public void onDestroy() { mSharedViewModel = null; super.onDestroy(); }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause called");
+    public void onDestroy() {
+        super.onDestroy();
+        mSharedViewModel.getPlaylistsLD().removeObservers(this);
+        mSharedViewModel = null;
     }
+
 
     @Override
     public void onItemClick(View view) {
@@ -84,18 +77,24 @@ public class PlaylistsFragment extends Fragment implements PlaylistsAdapterInter
         PlaylistsAdapter.PlaylistItemHolder holder =
                 (PlaylistsAdapter.PlaylistItemHolder)mLayoutBinding.mainList.getChildViewHolder(view);
         final String mediaId = holder.getMediaDescription().getMediaId();
-        final PlaylistMembersFragment playlistFragment = new PlaylistMembersFragment();
-        final String playlistFragTag = PlaylistMembersFragment.class.getCanonicalName();
         FragmentManager fm = getParentFragmentManager();
-        fm.beginTransaction().addToBackStack(TAG)
-                .add(R.id.main_fragment_container, new PlaylistMembersFragment(), playlistFragTag)
-                .commit();
         fm.executePendingTransactions();
+        fm.beginTransaction().addToBackStack(TAG)
+                .add(R.id.main_fragment_container,
+                        PlaylistMembersFragment.instanceFor(mediaId), PlaylistMembersFragment.TAG)
+                .commit();
+    }
+    
+    @Override
+    public void onAddPlaylistClick(View view){
+        mShowAddPlaylistDialouge();
     }
 
     private void mShowAddPlaylistDialouge(){
+        final FragmentManager fm = getParentFragmentManager();
+        fm.executePendingTransactions();
         //TODO : try commit and commitNow
-        getParentFragmentManager().beginTransaction()
+        fm.beginTransaction()
                 .addToBackStack(null)
                 .add(android.R.id.content, new AddPlaylistDialougeFragment(),
                         MainActivity.FRAGMENT_TAG_ADD_PLAYLIST)

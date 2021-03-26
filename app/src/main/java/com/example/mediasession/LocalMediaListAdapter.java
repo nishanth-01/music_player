@@ -18,19 +18,18 @@ import com.example.mediasession.databinding.MusicItemBinding;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LocalMediaListAdapter extends RecyclerView.Adapter<LocalMediaListAdapter.ThisViewHolder> {
+public class LocalMediaListAdapter extends RecyclerView.Adapter<LocalMediaListAdapter.ViewHolder> {
     private final List<MediaDescriptionCompat> mDataSet = new ArrayList<>();
-    private LocalMediaFragmentInterface mInputListener;
+    private ClickInterface mInputListener;
     private Drawable mDefaultThumb;
 
-    /*optionally remove file formate in display name*/
+    /*TODO : optionally remove file formate in display name*/
     /* make this flexible*/
 
-    public LocalMediaListAdapter(
-            @NonNull List<MediaBrowserCompat.MediaItem> dataSet,
-            @NonNull LocalMediaFragmentInterface inputListener, @Nullable Drawable defaultThumnail) {
-        if(dataSet ==null) throw new IllegalArgumentException("dataSet can't be null");
-        if(inputListener==null) throw new IllegalArgumentException("inputListener can't be null");
+    public LocalMediaListAdapter(@NonNull List<MediaBrowserCompat.MediaItem> dataSet,
+                                 @NonNull ClickInterface inputListener, @Nullable Drawable defaultThumnail) {
+        if(dataSet == null) throw new IllegalArgumentException("dataSet can't be null");
+        if(inputListener == null) throw new IllegalArgumentException("inputListener can't be null");
 
         List<MediaDescriptionCompat> mediaDescriptionList = new ArrayList<>();
         for(MediaBrowserCompat.MediaItem mediaItem : dataSet){
@@ -41,7 +40,7 @@ public class LocalMediaListAdapter extends RecyclerView.Adapter<LocalMediaListAd
         mDefaultThumb = defaultThumnail;
     }
 
-    public static class ThisViewHolder extends RecyclerView.ViewHolder {
+    public static final class ViewHolder extends RecyclerView.ViewHolder {
         private MusicItemBinding mMusicItemBinding;
         private MediaDescriptionCompat mMediaDescription;
 
@@ -49,42 +48,39 @@ public class LocalMediaListAdapter extends RecyclerView.Adapter<LocalMediaListAd
             return mMediaDescription;
         }
 
-        public ThisViewHolder(@NonNull View itemView, @NonNull MusicItemBinding musicItemBinding) {
+        public ViewHolder(@NonNull View itemView, @NonNull MusicItemBinding musicItemBinding) {
             super(itemView);
-            if(musicItemBinding==null) throw new IllegalArgumentException("musicItemBinding can't be null");
+            if(musicItemBinding == null) throw new IllegalArgumentException("musicItemBinding can't be null");
             mMusicItemBinding = musicItemBinding;
         }
     }
 
     @NonNull
     @Override
-    public ThisViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         Context parentContext = parent.getContext();
-        MusicItemBinding musicItemBinding =
+        MusicItemBinding binding =
                 MusicItemBinding.inflate(LayoutInflater.from(parentContext), parent, false);
-        final View root = musicItemBinding.getRoot();
+        final View root = binding.getRoot();
         root.setOnClickListener(v -> mInputListener.onClick(v));
-        musicItemBinding.options.setOnClickListener(v -> mInputListener.onOptionsClick(root));
-        return new ThisViewHolder(root, musicItemBinding);
+        binding.options.setOnClickListener(v -> mInputListener.onOptionsClick(root, v));
+        return new ViewHolder(root, binding);
     }
 
     /*  calculate time taken by this methode    */
     @Override
-    public void onBindViewHolder(@NonNull ThisViewHolder holder , int position) {
-        MediaDescriptionCompat mediaDescription = (MediaDescriptionCompat) mDataSet.get(position);
+    public void onBindViewHolder(@NonNull ViewHolder holder , int position) {
+        MediaDescriptionCompat md = mDataSet.get(position);
+        holder.mMediaDescription = md;
 
-        holder.mMusicItemBinding.textviewTitle.setText((String) mediaDescription.getTitle());
-        String artist = mediaDescription.getExtras()
-                .getString(ServiceMediaPlayback.MEDIA_DESCRIPTION_KEY_ARTIST);
+        holder.mMusicItemBinding.textviewTitle.setText(md.getTitle());
+
+        String artist = md.getExtras().getString(ServiceMediaPlayback.MDEK_ARTIST);
         holder.mMusicItemBinding.textviewArtist.setText(artist);
-        Bitmap thumb = mediaDescription.getIconBitmap();
+
+        Bitmap thumb = md.getIconBitmap();
         if(thumb != null) holder.mMusicItemBinding.displayIcon.setImageBitmap(thumb);
         else holder.mMusicItemBinding.displayIcon.setImageDrawable(mDefaultThumb);
-        holder.mMediaDescription = mediaDescription;
-    }
-
-    private boolean mIsEmpty(@Nullable String s){
-        return (s==null || s.isEmpty());
     }
 
     @Override

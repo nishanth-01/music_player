@@ -58,7 +58,7 @@ public class QueueListAdapter extends RecyclerView.Adapter<QueueListAdapter.Queu
         final MediaDescriptionCompat md = queueItem.getDescription();
         holder.mLayoutBinding.displayName.setText(md.getTitle());
         holder.mLayoutBinding.artistName.setText(md.getExtras()
-                .getString(ServiceMediaPlayback.MEDIA_DESCRIPTION_KEY_ARTIST));
+                .getString(ServiceMediaPlayback.MDEK_ARTIST));
         holder.mLayoutBinding.displayIcon.setImageBitmap(md.getIconBitmap());
         final int songsLeft = mDataset.size() - position;
         holder.mLayoutBinding.position.setText(Integer.toString(songsLeft));

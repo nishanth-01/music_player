@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class CompatMethods {
+    //TODO : replce this with androidx.core.content.res.ResourcesCompat
     /** @param theme won't apply if api level is lesser than 21 **/
     public static Drawable getDrawable(
             @NonNull Resources resources, int resId, @Nullable Resources.Theme theme)
