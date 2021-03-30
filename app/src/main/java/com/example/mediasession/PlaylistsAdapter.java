@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,7 +52,7 @@ public class PlaylistsAdapter extends RecyclerView.Adapter<PlaylistsAdapter.Play
     
     @Override
     public int getItemViewType(int position) {
-        return position >= mDataset.size() ? 1 : 0;
+        return position == 0 ? 1 : 0;
     }
 
     @NonNull
@@ -75,10 +76,12 @@ public class PlaylistsAdapter extends RecyclerView.Adapter<PlaylistsAdapter.Play
 
     @Override
     public void onBindViewHolder(@NonNull PlaylistItemHolder holder, int position) {
+        final int newPosition = position-1;
+        Log.d("TAG", "position:"+Integer.valueOf(position)+" newPosition:"+Integer.valueOf(newPosition));
         //TODO : ineffecient
-        if(position >= mDataset.size()) return;
+        if(newPosition == -1) /* Add Playlist Item */return;
         
-        MediaDescriptionCompat md = mDataset.get(position);
+        MediaDescriptionCompat md = mDataset.get(newPosition);
         holder.setMediaDescription(md);
         holder.mLayoutBinding.displayName.setText(md.getTitle());
         Bitmap thumb = md.getIconBitmap();

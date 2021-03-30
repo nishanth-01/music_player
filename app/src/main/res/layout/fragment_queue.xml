@@ -11,10 +11,8 @@
         android:id="@+id/list"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:paddingBottom="@dimen/fragment_queue_control_button_sides"
-        android:clipToPadding="false"
 
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/controlls_bg"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -26,7 +24,7 @@
         android:id="@+id/controlls_bg"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@drawable/fragment_queue_controlls_bg"
+        android:background="#131313"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -41,6 +39,8 @@
         app:layout_constraintBottom_toBottomOf="@+id/play_pause"
         app:layout_constraintEnd_toStartOf="@+id/play_pause"
         app:layout_constraintTop_toTopOf="@+id/play_pause" />
+
+    <!-- main reference for bottom part -->
     <ImageView
         android:id="@+id/play_pause"
         android:layout_width="@dimen/fragment_queue_control_button_sides"

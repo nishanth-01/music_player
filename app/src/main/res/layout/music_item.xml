@@ -19,11 +19,11 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:src="@drawable/music_item_menu_def_thumb" />
 
+    <!-- TODO : make padding strart/end values of textview_title and textview_artist common -->
     <TextView
         android:id="@+id/textview_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/music_item_display_name_margin_s"
         android:ellipsize="end"
         android:fontFamily="@font/roboto_medium_numbers"
         android:singleLine="true"
@@ -31,6 +31,7 @@
         android:textColor="#F8F8FF"
         android:textSize="@dimen/music_item_title_textsize"
         android:paddingStart="8dp"
+        android:paddingEnd="8dp"
 
         app:layout_constraintVertical_chainStyle="packed"
         app:layout_constraintBottom_toTopOf="@id/textview_artist"
@@ -46,7 +47,7 @@
         android:textAlignment="textStart"
         android:textColor="#e0e0e0"
         android:textSize="@dimen/music_item_artist_name_textsize"
-        android:paddingStart="9dp"
+        android:paddingStart="8dp"
 
         app:layout_constraintVertical_chainStyle="packed"
         app:layout_constraintBottom_toBottomOf="@id/display_icon"

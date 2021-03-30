@@ -1,0 +1,23 @@
+use enum instead of constant int/String pattern
+
+popbackstack properly
+
+work on constant strings (use little unique keys)
+
+show bottom nav on playlists screen
+
+In MainSharedViewModel communicate with fragments with LiveData
+
+Make sure media id's are unique
+
+Fix - Back Press
+    - Load data in proper order handle data properly
+    - Notification
+
+TODO
+    - Add  playlist data change observer to  PlaylistMembersFragment and handle data change properly
+    - add "add playlist" button to PlaylistSelectorFragment
+    - do "notifiy error to user" work
+    - fix mini player show and hide dont interupt its movement make it look smooth
+    - Use  a base class for adapters
+    - Move values in xml to appropriate files app/res/values folder

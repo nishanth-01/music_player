@@ -2,9 +2,12 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@drawable/playlist_item_bg"
+    android:background="@color/playlist_item_bg_color"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginStart="4dp"
+    android:layout_marginEnd="4dp"
+    android:layout_marginBottom="4dp">
 
     <ImageView
         android:id="@+id/display_icon"
@@ -13,23 +16,23 @@
         android:layout_margin="@dimen/playlist_item_image_margin"
         tools:src="@drawable/exo_ic_default_album_image"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/display_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/playlist_item_display_name_margin_lr"
-        android:layout_marginEnd="@dimen/playlist_item_display_name_margin_lr"
+        android:layout_marginStart="@dimen/playlist_item_display_name_margin_se"
+        android:layout_marginEnd="@dimen/playlist_item_display_name_margin_se"
         tools:text="MyPlaylist"
         android:textSize="@dimen/playlist_item_display_name_size"
         android:fontFamily="@font/open_sans_bold"
         android:textColor="@color/white"
 
         app:layout_constraintBottom_toBottomOf="@id/display_icon"
-        app:layout_constraintEnd_toStartOf="@id/display_icon"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/display_icon"
         app:layout_constraintTop_toTopOf="@id/display_icon" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

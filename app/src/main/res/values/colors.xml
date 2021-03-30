@@ -23,15 +23,15 @@
     <color name="fragment_player_bg">#adadad</color>
 
     <!-- fragment_queue-->
-    <color name="fragment_queue_bg">#4a4a4a</color>
+    <color name="fragment_queue_bg">#222222</color>
     <color name="fragment_queue_controlls_bg">#DD000000</color>
 
     <!-- music_item -->
     <color name="music_item_bg">@color/black</color>
 
     <!-- playlist_item -->
-    <color name="playlist_item_bg_color">@color/black</color>
+    <color name="playlist_item_bg_color">#0000</color>
 
     <!-- fragment_playlists -->
-    <color name="fragment_playlists_bg_color">#383838</color>
+    <color name="fragment_playlists_bg_color">@color/black</color>
 </resources>

@@ -1,5 +1,6 @@
 package com.example.mediasession;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
@@ -18,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.mediasession.databinding.FragmentPlaylistsBinding;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PlaylistsFragment extends Fragment implements PlaylistsAdapterInterface {
@@ -25,6 +27,7 @@ public class PlaylistsFragment extends Fragment implements PlaylistsAdapterInter
 
     private FragmentPlaylistsBinding mLayoutBinding;
     private MainSharedViewModel mSharedViewModel;
+    private Drawable mDefaultDisplayIcon;
 
     public PlaylistsFragment() { super(); }
     
@@ -34,6 +37,9 @@ public class PlaylistsFragment extends Fragment implements PlaylistsAdapterInter
         super.onCreate(savedInstanceState);
         mSharedViewModel = new ViewModelProvider(getActivity())
                 .get(MainActivity.MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
+
+        mDefaultDisplayIcon = ResourcesCompat.getDrawable(getResources(),
+                R.drawable.ic_default_albumart_thumb, null);
     }
 
     @Nullable
@@ -42,15 +48,15 @@ public class PlaylistsFragment extends Fragment implements PlaylistsAdapterInter
                              @Nullable Bundle savedInstanceState) {
         mLayoutBinding = FragmentPlaylistsBinding.inflate(inflater, container, false);
         mLayoutBinding.mainList.setLayoutManager(new LinearLayoutManager(getContext()));
+        mLayoutBinding.mainList.setAdapter(new PlaylistsAdapter(new ArrayList<>(0),
+                PlaylistsFragment.this, mDefaultDisplayIcon));
         mSharedViewModel.getPlaylistsLD().observe(this,
                 new Observer<List<MediaBrowserCompat.MediaItem>>() {
                     @Override
                     public void onChanged(List<MediaBrowserCompat.MediaItem> mediaItems) {
                         //TODO : handle data change without setting a new adapter
                         mLayoutBinding.mainList.setAdapter(new PlaylistsAdapter(mediaItems,
-                                PlaylistsFragment.this,
-                                ResourcesCompat.getDrawable(getResources(),
-                                        R.drawable.ic_default_albumart_thumb, null)));
+                                PlaylistsFragment.this, mDefaultDisplayIcon));
                     }
                 });
         return mLayoutBinding.getRoot();

@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentResultListener;
@@ -109,7 +110,7 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
                         mDataSet.clear(); mDataSet.addAll(mediaItems);
                         mLayout.mainList.setAdapter(new LocalMediaListAdapter(mDataSet,
                                 (ClickInterface) LocalMediaFragment.this,
-                                CompatMethods.getDrawable(getResources(), R.drawable.ic_default_albumart_thumb, null)));
+                                ResourcesCompat.getDrawable(getResources(), R.drawable.ic_default_albumart_thumb, null)));
                     }
                 });
         return mLayout.getRoot();

@@ -27,6 +27,4 @@
     <string name="mediadescription_default_artist_name">-</string>
     <string name="mediadescription_default_display_name">-</string>
     <string name="mediadescription_default_duration">0</string>
-
-    <string name="new_playlist">New Playlist</string>
 </resources>

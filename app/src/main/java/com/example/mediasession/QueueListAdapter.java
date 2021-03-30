@@ -1,5 +1,7 @@
 package com.example.mediasession;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.view.LayoutInflater;
@@ -7,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mediasession.databinding.QueueItemBinding;
@@ -17,12 +20,15 @@ import java.util.List;
 public class QueueListAdapter extends RecyclerView.Adapter<QueueListAdapter.QueueItemHolder> {
     private final List<MediaSessionCompat.QueueItem> mDataset = new ArrayList<>();
     private QueueListAdapterListener mClickListener;
+    private Drawable mDefaultDisplayIcon;
 
     public QueueListAdapter(@NonNull List<MediaSessionCompat.QueueItem> dataset,
-                        @NonNull QueueListAdapterListener clickListener) {
+                            @NonNull QueueListAdapterListener clickListener,
+                            @Nullable Drawable defaultDisplayIcon) {
         super();
         if(dataset==null || clickListener==null) throw new IllegalArgumentException();
         this.mDataset.addAll(dataset); this.mClickListener = clickListener;
+        mDefaultDisplayIcon = defaultDisplayIcon;
     }
 
     static class QueueItemHolder extends RecyclerView.ViewHolder {
@@ -59,9 +65,9 @@ public class QueueListAdapter extends RecyclerView.Adapter<QueueListAdapter.Queu
         holder.mLayoutBinding.displayName.setText(md.getTitle());
         holder.mLayoutBinding.artistName.setText(md.getExtras()
                 .getString(ServiceMediaPlayback.MDEK_ARTIST));
-        holder.mLayoutBinding.displayIcon.setImageBitmap(md.getIconBitmap());
-        final int songsLeft = mDataset.size() - position;
-        holder.mLayoutBinding.position.setText(Integer.toString(songsLeft));
+        Bitmap bitmap = md.getIconBitmap();
+        if(bitmap != null) holder.mLayoutBinding.displayIcon.setImageBitmap(bitmap);
+        else holder.mLayoutBinding.displayIcon.setImageDrawable(mDefaultDisplayIcon);
     }
 
     @Override

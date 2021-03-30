@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -79,7 +80,7 @@ public class PlayerFragment extends Fragment {
                 if(TextUtils.isEmpty(displayName)) displayName = getString(R.string.mediadescription_default_display_name);
                 if(TextUtils.isEmpty(artistName)) artistName = getString(R.string.mediadescription_default_artist_name);
                 if(albumArt == null) {
-                    mLayoutBinding.albumart.setImageDrawable(CompatMethods
+                    mLayoutBinding.albumart.setImageDrawable(ResourcesCompat
                             .getDrawable(getResources(), R.drawable.ic_default_albumart, null));
                 } else mLayoutBinding.albumart.setImageBitmap(albumArt);
 
@@ -97,7 +98,7 @@ public class PlayerFragment extends Fragment {
                 }
                 int resId = playWhenReady ? R.drawable.exo_controls_pause : R.drawable.exo_controls_play;
                 mLayoutBinding.controllsPlayPauseButton
-                        .setImageDrawable(CompatMethods.getDrawable(getResources(), resId, null));
+                        .setImageDrawable(ResourcesCompat.getDrawable(getResources(), resId, null));
             }
         });
     }
