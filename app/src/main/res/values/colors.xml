@@ -8,7 +8,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="main_bottom_nav_bg">#1c1c1c</color>
+    <color name="main_bottom_nav_bg">#222</color>
     <color name="main_bottom_nav_divider_color">#424242</color>
     <color name="bottom_nav_text_color">@color/white</color>
 
@@ -33,5 +33,5 @@
     <color name="playlist_item_bg_color">#0000</color>
 
     <!-- fragment_playlists -->
-    <color name="fragment_playlists_bg_color">@color/black</color>
+    <color name="fragment_playlists_bg_color">@color/main_bottom_nav_bg</color>
 </resources>

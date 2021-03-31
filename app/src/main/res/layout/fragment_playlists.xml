@@ -5,11 +5,37 @@
     android:layout_height="match_parent"
     android:background="@color/fragment_playlists_bg_color"
     xmlns:tools="http://schemas.android.com/tools">
-    
-    <androidx.recyclerview.widget.RecyclerView android:id="@+id/main_list"
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/search_bar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:listitem="@layout/playlist_item"
-        tools:itemCount="8"/>
+        android:layout_height="wrap_content"
+        android:layout_marginStart="18dp"
+        android:layout_marginEnd="18dp"
+        android:layout_marginTop="18dp"
+        android:padding="10dp"
+        android:background="@drawable/fragment_playlist_search_bar_bg"
+        android:textSize="23sp"
+        android:fontFamily="@font/open_sans_bold"
+        android:hint="Search Playlists"
+        android:textColorHint="#8888"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/main_list"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/black"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/search_bar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:itemCount="8"
+        tools:listitem="@layout/playlist_item" />
         
 </androidx.constraintlayout.widget.ConstraintLayout>

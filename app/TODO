@@ -13,6 +13,7 @@ Make sure media id's are unique
 Fix - Back Press
     - Load data in proper order handle data properly
     - Notification
+    - All EditTexts overflow
 
 TODO
     - Add  playlist data change observer to  PlaylistMembersFragment and handle data change properly
@@ -21,3 +22,5 @@ TODO
     - fix mini player show and hide dont interupt its movement make it look smooth
     - Use  a base class for adapters
     - Move values in xml to appropriate files app/res/values folder
+
+NEXT - Add search features to all lists

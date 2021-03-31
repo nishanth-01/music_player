@@ -4,21 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#484848"
+    android:background="@drawable/add_playlist_item_bg"
 
-    android:layout_marginTop="8dp"
-    android:layout_marginBottom="12dp"
-    android:layout_marginStart="8dp"
-    android:layout_marginEnd="8dp">
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp"
+    android:layout_marginStart="6dp"
+    android:layout_marginEnd="6dp">
 
-\    <TextView android:id="@+id/add_playlist"
+    <TextView android:id="@+id/add_playlist"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="12dp"
+        android:padding="14dp"
 
         android:text="Create Playlist"
-        android:textSize="24sp"
-        android:textColor="#D8FFFFFF"
+        android:textSize="16sp"
+        android:textColor="#EEFFFFFF"
         android:fontFamily="@font/open_sans_bold"
 
         app:layout_constraintTop_toTopOf="parent"
