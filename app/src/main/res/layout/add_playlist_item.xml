@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:background="@drawable/add_playlist_item_bg"
 
-    android:layout_marginTop="6dp"
+    android:layout_marginTop="10dp"
     android:layout_marginBottom="6dp"
     android:layout_marginStart="6dp"
     android:layout_marginEnd="6dp">

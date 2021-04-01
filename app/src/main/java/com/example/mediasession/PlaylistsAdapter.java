@@ -64,6 +64,7 @@ public class PlaylistsAdapter extends RecyclerView.Adapter<PlaylistsAdapter.Play
 
             View view = binding.getRoot();
             view.setOnClickListener(v -> mClickListener.onItemClick(v));
+            binding.play.setOnClickListener(view1 -> mClickListener.onPlayButtonClick(view));
             return new PlaylistItemHolder(view, binding);
         } else /* if 1 */ {
             AddPlaylistItemBinding addPlaylistBinding = AddPlaylistItemBinding

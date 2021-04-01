@@ -90,7 +90,16 @@ public class PlaylistsFragment extends Fragment implements PlaylistsAdapterInter
                         PlaylistMembersFragment.instanceFor(mediaId), PlaylistMembersFragment.TAG)
                 .commit();
     }
-    
+
+    @Override
+    public void onPlayButtonClick(View rootView) {
+        PlaylistsAdapter.PlaylistItemHolder holder =
+                (PlaylistsAdapter.PlaylistItemHolder)mLayoutBinding.mainList.getChildViewHolder(rootView);
+        final String mediaId = holder.getMediaDescription().getMediaId();
+
+        mSharedViewModel.playPlaylist(mediaId);
+    }
+
     @Override
     public void onAddPlaylistClick(View view){
         mShowAddPlaylistDialouge();

@@ -35,4 +35,19 @@
         app:layout_constraintStart_toEndOf="@id/display_icon"
         app:layout_constraintTop_toTopOf="@id/display_icon" />
 
+    <TextView android:id="@+id/play"
+        android:layout_width="@dimen/playlist_item_play_size"
+        android:layout_height="@dimen/playlist_item_play_size"
+        android:layout_marginEnd="@dimen/playlist_item_play_margin"
+        android:padding="6dp"
+        android:background="@drawable/playlist_item_play_bg"
+        android:text="Play"
+        android:textColor="#222"
+        android:textAlignment="center"
+        android:gravity="center_vertical |center_horizontal"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/display_icon"
+        app:layout_constraintBottom_toBottomOf="@id/display_icon"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

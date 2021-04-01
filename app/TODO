@@ -22,5 +22,10 @@ TODO
     - fix mini player show and hide dont interupt its movement make it look smooth
     - Use  a base class for adapters
     - Move values in xml to appropriate files app/res/values folder
+    - Write Unit Test
+    - Check if alpha backgrounds affect performance
+    - Distinguish bottom nav elements by their size (the selected one is bigger)
+    - Easter Egg : clicking the active bottom nav element multiple times makes the element give a gesture like its annoyed(like moving left to right fastly)
+    - Show playlist name in PlaylistMembersFragment Title Bar
 
-NEXT - Add search features to all lists
+NEXT - Add search features to all required lists

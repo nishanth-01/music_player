@@ -8,7 +8,10 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="main_bottom_nav_bg">#222</color>
+    <color name="comman_black">#000</color>
+    <color name="comman_grey">#222</color>
+
+    <color name="main_bottom_nav_bg">@color/comman_grey</color>
     <color name="main_bottom_nav_divider_color">#424242</color>
     <color name="bottom_nav_text_color">@color/white</color>
 
@@ -27,7 +30,7 @@
     <color name="fragment_queue_controlls_bg">#DD000000</color>
 
     <!-- music_item -->
-    <color name="music_item_bg">@color/black</color>
+    <color name="music_item_bg">@color/comman_black</color>
 
     <!-- playlist_item -->
     <color name="playlist_item_bg_color">#0000</color>

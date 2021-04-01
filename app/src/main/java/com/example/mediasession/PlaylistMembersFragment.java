@@ -92,7 +92,7 @@ public class PlaylistMembersFragment extends Fragment implements ClickInterface 
         mLayoutBinding = FragmentPlaylistMembersBinding.inflate(inflater, container, false);
         mLayoutBinding.playPlaylist.setVisibility(View.GONE);
         mLayoutBinding.mainList.setLayoutManager(new LinearLayoutManager(getContext()));
-        mLayoutBinding.playlistName.setText("A Playlist Name");
+        mLayoutBinding.playlistName.setText("Playlist");
         
         mPopup = new PopupMenu(getContext(), mLayoutBinding.options);
         MenuInflater menuInflater = mPopup.getMenuInflater();

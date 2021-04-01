@@ -42,6 +42,8 @@
     <!-- playlist item -->
     <dimen name="playlist_item_image_size">56dp</dimen>
     <dimen name="playlist_item_image_margin">4dp</dimen>
+    <dimen name="playlist_item_play_size">@dimen/playlist_item_image_size</dimen>
+    <dimen name="playlist_item_play_margin">@dimen/playlist_item_image_margin</dimen>
     <dimen name="playlist_item_display_name_size">22sp</dimen>
     <dimen name="playlist_item_display_name_margin_se">8dp</dimen>
     <dimen name="playlist_item_display_name_padding">2dp</dimen>
