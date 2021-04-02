@@ -75,8 +75,9 @@ public class PlaylistMembersFragment extends Fragment implements ClickInterface 
                 }
                 if(mediaDescription != null){
                     mLayoutBinding.playlistName.setText(mediaDescription.getTitle());
+                    mSharedVM.subscribePlaylistMember(mediaDescription.getMediaId(), mSubCallback);
                 } else {
-                    //TODO : notify user error
+                    //TODO : notify user the error
                     getParentFragmentManager().popBackStack();
                 }
             }
@@ -100,7 +101,9 @@ public class PlaylistMembersFragment extends Fragment implements ClickInterface 
 
             @Override
             public void onError(@NonNull String parentId, @NonNull Bundle options) {
-                getParentFragmentManager().popBackStack(); //TODO : temp imp
+                //TODO : handle properly
+                Toast.makeText(getContext(), "Can't load playlist", Toast.LENGTH_SHORT).show();
+                getParentFragmentManager().popBackStack();
             }
         };
     }
@@ -139,13 +142,9 @@ public class PlaylistMembersFragment extends Fragment implements ClickInterface 
     }
 
     @Override
-    public void onStart() {
-        super.onStart(); mSharedVM.subscribePlaylistMember(mPlaylistId, mSubCallback);
-    }
-
-    @Override
     public void onStop() {
-        super.onStop(); mSharedVM.unsubscribePlaylistMember(mPlaylistId, mSubCallback);
+        super.onStop();
+        if(mSubscribed) mSharedVM.unsubscribePlaylistMember(mPlaylistId, mSubCallback);
     }
 
     @Override
