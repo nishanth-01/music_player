@@ -14,6 +14,7 @@ Fix - Back Press
     - Load data in proper order handle data properly
     - Notification
     - All EditTexts overflow
+    - make sure Popbackstack removes the intented fragment
 
 TODO
     - Add  playlist data change observer to  PlaylistMembersFragment and handle data change properly
@@ -29,5 +30,6 @@ TODO
     - Show playlist name in PlaylistMembersFragment Title Bar
     - use swapAdapter() instead of setAdapter()
     - Hide search bar on scroll
+    - Add Wifi Sharing feature
 
 NEXT - Add search features to all required lists

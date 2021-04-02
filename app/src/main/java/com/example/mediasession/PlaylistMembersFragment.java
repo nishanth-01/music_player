@@ -17,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -31,6 +32,7 @@ public class PlaylistMembersFragment extends Fragment implements ClickInterface 
     private String mPlaylistId;
     private FragmentPlaylistMembersBinding mLayoutBinding;
     private MainSharedViewModel mSharedVM;
+    private Observer<List<MediaBrowserCompat.MediaItem>> mPlaylistObserver;
     
     private PopupMenu mPopup;
 
@@ -54,11 +56,32 @@ public class PlaylistMembersFragment extends Fragment implements ClickInterface 
         if(savedInstanceState != null) {
             String id;
             id = savedInstanceState.getString(KEY_PLAYLIST_ID, "");
-            if(id.equals("")) throw new RuntimeException();//TODO - IMP : pop this fragment
+            if(id.equals("")) throw new RuntimeException(); //TODO - IMP : pop this fragment
             else mPlaylistId = id;
         }
         mSharedVM = new ViewModelProvider(getActivity())
                 .get(MainActivity.MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
+
+        mPlaylistObserver = new Observer<List<MediaBrowserCompat.MediaItem>>() {
+            @Override
+            public void onChanged(List<MediaBrowserCompat.MediaItem> mediaItems) {
+                MediaDescriptionCompat mediaDescription = null;
+                for(MediaBrowserCompat.MediaItem mediaItem : mediaItems){
+                    MediaDescriptionCompat md = mediaItem.getDescription();
+                    if(md.getMediaId().equals(mPlaylistId)) {
+                        mediaDescription = md;
+                        break;
+                    }
+                }
+                if(mediaDescription != null){
+                    mLayoutBinding.playlistName.setText(mediaDescription.getTitle());
+                } else {
+                    //TODO : notify user error
+                    getParentFragmentManager().popBackStack();
+                }
+            }
+        };
+        mSharedVM.getPlaylistsLD().observe(this, mPlaylistObserver);
 
         mSubCallback = new MediaBrowserCompat.SubscriptionCallback() {
             @Override
@@ -127,6 +150,7 @@ public class PlaylistMembersFragment extends Fragment implements ClickInterface 
 
     @Override
     public void onDestroy(){
+        mSharedVM.getPlaylistsLD().removeObservers(this);
         super.onDestroy(); mSubCallback = null;
     }
 
