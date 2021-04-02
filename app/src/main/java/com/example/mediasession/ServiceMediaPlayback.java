@@ -236,6 +236,9 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
         };
         mRepositary.setPlaylistsObserver(mPlaylistsObserver);
 
+        //TODO : Temp solution to the bug that crashes the app if playlist_item play button clicked as soon as the app starts
+        mCurrentMetaData = mSessionMetaDataBuilder.build();
+
 
         //________________________________
 
@@ -429,9 +432,6 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                                 new Size(albumArtSize, albumArtSize), null);
                     } catch (IOException e){
                         Log.e(TAG, "IOException failed to load AlbumArt");e.printStackTrace();
-                    } finally {
-                        if(albumArt == null) albumArt = BitmapFactory
-                                .decodeResource(getResources(), R.drawable.baseline_album_black_48dp);
                     }
                     mSessionMetaDataBuilder
                             .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE,

@@ -23,7 +23,7 @@
     <color name="tablayout_text_color">#adadad</color>
 
     <!-- fragment_player -->
-    <color name="fragment_player_bg">#adadad</color>
+    <color name="fragment_player_bg">@color/comman_black</color>
 
     <!-- fragment_queue-->
     <color name="fragment_queue_bg">#222222</color>

@@ -25,7 +25,9 @@
         android:fontFamily="@font/roboto_medium_numbers"
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
-        android:text="Sample Display Name" android:textColor="@color/white" android:textSize="@dimen/fragment_player_display_name_size"
+        android:text="Sample Display Name"
+        android:textColor="@color/white"
+        android:textSize="@dimen/fragment_player_display_name_size"
 
         app:layout_constraintBottom_toTopOf="@id/artist"
         app:layout_constraintEnd_toEndOf="@id/albumart"

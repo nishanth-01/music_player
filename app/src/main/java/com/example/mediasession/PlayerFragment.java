@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,7 +49,7 @@ public class PlayerFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mLayoutBinding.getRoot().setOnClickListener(null);
-        mLayoutBinding.displayName.setSelected(true);mLayoutBinding.artist.setSelected(true);
+        mLayoutBinding.displayName.setSelected(true); mLayoutBinding.artist.setSelected(true);
         mLayoutBinding.queue.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -77,8 +76,11 @@ public class PlayerFragment extends Fragment {
                 String displayName = mediaMetadataCompat.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE);
                 String artistName = mediaMetadataCompat.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
                 Bitmap albumArt = mediaMetadataCompat.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
-                if(TextUtils.isEmpty(displayName)) displayName = getString(R.string.mediadescription_default_display_name);
-                if(TextUtils.isEmpty(artistName)) artistName = getString(R.string.mediadescription_default_artist_name);
+
+                if(displayName == null || displayName.isEmpty())
+                    displayName = getString(R.string.mediadescription_default_display_name);
+                if(artistName == null || artistName.isEmpty())
+                    artistName = getString(R.string.mediadescription_default_artist_name);
                 if(albumArt == null) {
                     mLayoutBinding.albumart.setImageDrawable(ResourcesCompat
                             .getDrawable(getResources(), R.drawable.ic_default_albumart, null));
