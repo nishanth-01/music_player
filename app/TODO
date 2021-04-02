@@ -27,5 +27,7 @@ TODO
     - Distinguish bottom nav elements by their size (the selected one is bigger)
     - Easter Egg : clicking the active bottom nav element multiple times makes the element give a gesture like its annoyed(like moving left to right fastly)
     - Show playlist name in PlaylistMembersFragment Title Bar
+    - use swapAdapter() instead of setAdapter()
+    - Hide search bar on scroll
 
 NEXT - Add search features to all required lists

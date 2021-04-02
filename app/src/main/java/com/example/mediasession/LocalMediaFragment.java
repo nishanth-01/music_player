@@ -20,6 +20,7 @@ import androidx.fragment.app.FragmentResultListener;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.mediasession.databinding.FragmentLocalMediaBinding;
 
@@ -40,6 +41,9 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
     
     private String mSelectedItemId;
 
+    private RecyclerView.OnScrollListener mOnScrollListener;
+    private int mListPositionY;
+
     public LocalMediaFragment() { super(); }
 
     @Override
@@ -49,6 +53,16 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
                 .get(MainActivity.MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
                 
         mFragmentManger = getParentFragmentManager();
+
+        mOnScrollListener = new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                //Log.d(TAG, "dx:"+Integer.valueOf(dx)+" dy:"+Integer.valueOf(dy));
+                //if(dy > -1) mLayout.searchBarHolder.setVisibility(View.GONE);
+                //else mLayout.searchBarHolder.setVisibility(View.VISIBLE);
+            }
+        };
         
         mPlaylistSelectorResultListener = new FragmentResultListener(){
             @Override
@@ -100,6 +114,7 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
                              @Nullable Bundle savedInstanceState) {
         mLayout = FragmentLocalMediaBinding.inflate(inflater, container, false);
         mLayout.mainList.setLayoutManager(new LinearLayoutManager(getContext()));
+
         mMainSharedVM.getAllLocalMediaLD().observe(this,
                 new Observer<List<MediaBrowserCompat.MediaItem>>() {
                     @Override
@@ -109,8 +124,11 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
                         //TODO : handle data change properly currently resets the adapter if data changed
                         mDataSet.clear(); mDataSet.addAll(mediaItems);
                         mLayout.mainList.setAdapter(new LocalMediaListAdapter(mDataSet,
-                                (ClickInterface) LocalMediaFragment.this,
-                                ResourcesCompat.getDrawable(getResources(), R.drawable.ic_default_albumart_thumb, null)));
+                                LocalMediaFragment.this,
+                                ResourcesCompat.getDrawable(getResources(),
+                                        R.drawable.ic_default_albumart_thumb, null)));
+
+                        mLayout.mainList.addOnScrollListener(mOnScrollListener);
                     }
                 });
         return mLayout.getRoot();
@@ -118,6 +136,7 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
 
     @Override
     public void onDestroyView() {
+        mLayout.mainList.removeOnScrollListener(mOnScrollListener);
         mMainSharedVM.getAllLocalMediaLD().removeObservers(this);
         super.onDestroyView();
     }
@@ -168,7 +187,7 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
         });
         popup.show();
     }
-    
+
     private void mShowPlaylistSelector(){
         mFragmentManger.setFragmentResultListener(
                     LocalMediaFragment.PLAYLIST_SELECTOR_REQUEST_KEY, 

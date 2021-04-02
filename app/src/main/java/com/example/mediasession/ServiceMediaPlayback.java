@@ -240,9 +240,9 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
         mCurrentMetaData = mSessionMetaDataBuilder.build();
 
 
-        //________________________________
+        // ________________________________
 
-        // ____________MediaSession _______________
+        // ____________ MediaSession _______________
         mMediaSession = new MediaSessionCompat(this, MEDIA_SESSION_DEBUGGER_ID);
         mMediaSession.setCallback(new MediaSessionCompat.Callback() {
             @Override
@@ -254,10 +254,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
             public void onPlayFromMediaId(String mediaId, Bundle extras) {
                 MediaBrowserCompat.MediaItem mediaItem = mSharedStorageAudioMap.get((String) mediaId);
 
-                if(mediaItem == null){
-                    //TODO : notify user error
-                    return;
-                }
+                if(mediaItem == null){ /* TODO : notify user error */ return; }
                 if(mediaItem.isPlayable()){
                     mPlayer.clearMediaItems();
                     MediaItem exoMediaItem = mExoMediaItemBuilder
@@ -332,8 +329,10 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
             @Override
             public void onPlaybackStateChanged(int state) {
                 switch (state){
-                    case Player.STATE_IDLE: mReciveTransportControlls = false;
-                    mPlayer.setPlayWhenReady(false);break;
+                    case Player.STATE_IDLE: {
+                        mReciveTransportControlls = false; mPlayer.setPlayWhenReady(false);
+                        break;
+                    }
                     case Player.STATE_BUFFERING: break;
                     case Player.STATE_READY: break;
                     case Player.STATE_ENDED: {

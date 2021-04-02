@@ -34,7 +34,4 @@
 
     <!-- playlist_item -->
     <color name="playlist_item_bg_color">#0000</color>
-
-    <!-- fragment_playlists -->
-    <color name="fragment_playlists_bg_color">@color/main_bottom_nav_bg</color>
 </resources>
