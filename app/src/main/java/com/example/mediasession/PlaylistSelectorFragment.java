@@ -54,7 +54,8 @@ public class PlaylistSelectorFragment extends Fragment implements ClickListener 
                         //TODO : handle data change without setting a new adapter
                         mLayoutBinding.mainList.setAdapter(new PlaylistSelectorAdapter(mediaItems,
                                 PlaylistSelectorFragment.this, 
-                                ResourcesCompat.getDrawable(getResources(), R.drawable.ic_default_albumart_thumb, null)));
+                                ResourcesCompat.getDrawable(getResources(),
+                                        R.drawable.ic_default_albumart_thumb, null)));
                     }
                 });
         return mLayoutBinding.getRoot();
@@ -64,12 +65,12 @@ public class PlaylistSelectorFragment extends Fragment implements ClickListener 
     public void onDestroyView() {
         mLayoutBinding.mainList.setAdapter(null);
         mLayoutBinding.mainList.setLayoutManager(null);
+        mSharedViewModel.getPlaylistsLD().removeObservers(this);
         super.onDestroyView();
     }
 
     @Override
     public void onDestroy() {
-        mSharedViewModel.getPlaylistsLD().removeObservers(this);
         mSharedViewModel = null;
         super.onDestroy();
     }
@@ -94,7 +95,19 @@ public class PlaylistSelectorFragment extends Fragment implements ClickListener 
         
         mFragmentManager.popBackStack();
     }
-    
+
+    @Override
+    public void onAddPlaylistClick(View view) {
+        final FragmentManager fm = getParentFragmentManager();
+        fm.executePendingTransactions();
+        //TODO : try commit and commitNow
+        fm.beginTransaction()
+                .addToBackStack(null)
+                .add(android.R.id.content, new AddPlaylistDialougeFragment(),
+                        AddPlaylistDialougeFragment.TAG)
+                .commit();
+    }
+
     @Nullable
     private MediaDescriptionCompat mGetDescriptionFromView(View v){
         PlaylistSelectorAdapter.ViewHolder viewHolder =

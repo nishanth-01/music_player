@@ -47,8 +47,6 @@ public class AddPlaylistDialougeFragment extends Fragment {
             public void onClick(View v) {
                 final CharSequence playlistName = mLayoutBinding.editText.getText();
                 mSharedVM.addPlaylist(playlistName.toString());
-                Log.w(TAG, LT.IP+ "show loading animation and remove this dialouge when "+
-                        "playlist is added");
                 mRemoveMe();
             }
         });

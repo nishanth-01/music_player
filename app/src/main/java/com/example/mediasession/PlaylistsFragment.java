@@ -102,17 +102,13 @@ public class PlaylistsFragment extends Fragment implements PlaylistsAdapterInter
 
     @Override
     public void onAddPlaylistClick(View view){
-        mShowAddPlaylistDialouge();
-    }
-
-    private void mShowAddPlaylistDialouge(){
         final FragmentManager fm = getParentFragmentManager();
         fm.executePendingTransactions();
         //TODO : try commit and commitNow
         fm.beginTransaction()
                 .addToBackStack(null)
                 .add(android.R.id.content, new AddPlaylistDialougeFragment(),
-                        MainActivity.FRAGMENT_TAG_ADD_PLAYLIST)
+                        AddPlaylistDialougeFragment.TAG)
                 .commit();
     }
 }

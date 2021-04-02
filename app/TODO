@@ -17,8 +17,10 @@ Fix - Back Press
     - make sure Popbackstack removes the intented fragment
 
 TODO
-    - Add  playlist data change observer to  PlaylistMembersFragment and handle data change properly
-    - add "add playlist" button to PlaylistSelectorFragment
+    - Add "add playlist" button to PlaylistSelectorFragment
+    - Add Multi Select Options to PlaylistSelectorFragment
+    - Rebuild PlaylistSelectorFragment UI(use a semi transparent, non fullscreen fragment)
+    - Limit the no.of characters allowed for playlist name
     - do "notifiy error to user" work
     - fix mini player show and hide dont interupt its movement make it look smooth
     - Use  a base class for adapters

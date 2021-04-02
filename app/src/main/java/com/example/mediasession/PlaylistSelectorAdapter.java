@@ -15,7 +15,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.example.mediasession.databinding.AddPlaylistItemBinding;
 import com.example.mediasession.databinding.PlaylistItemBinding;
+import com.example.mediasession.databinding.PlaylistSelectorItemBinding;
 
 public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistSelectorAdapter.ViewHolder> {
     
@@ -36,30 +38,46 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistSelect
     }
     
     public static class ViewHolder extends RecyclerView.ViewHolder{
-        private PlaylistItemBinding mLayoutBinding;
+        private PlaylistSelectorItemBinding mLayoutBinding;
         private MediaDescriptionCompat mMediaDescription;
 
         MediaDescriptionCompat getMediaDescription(){ return mMediaDescription; }
 
-        public ViewHolder(@NonNull View itemView, PlaylistItemBinding mLayoutBinding) {
+        public ViewHolder(@NonNull View itemView, PlaylistSelectorItemBinding mLayoutBinding) {
             super(itemView); this.mLayoutBinding = mLayoutBinding;
         }
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position == 0 ? 1 : 0;
     }
     
     @NonNull
     @Override
     public PlaylistSelectorAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        PlaylistItemBinding binding = PlaylistItemBinding
-                .inflate(LayoutInflater.from(parent.getContext()), parent, false);
+        if(viewType == 0){
+            PlaylistSelectorItemBinding binding = PlaylistSelectorItemBinding
+                    .inflate(LayoutInflater.from(parent.getContext()), parent, false);
 
-        View view = binding.getRoot();
-        view.setOnClickListener(v -> mClickListener.onItemClick(v));
-        return new PlaylistSelectorAdapter.ViewHolder(view, binding);
+            View view = binding.getRoot();
+            view.setOnClickListener(v -> mClickListener.onItemClick(v));
+            return new PlaylistSelectorAdapter.ViewHolder(view, binding);
+        } else /* if 1 */{
+            AddPlaylistItemBinding addPlaylistBinding = AddPlaylistItemBinding
+                    .inflate(LayoutInflater.from(parent.getContext()), parent, false);
+            View view = addPlaylistBinding.getRoot();
+            view.setOnClickListener(v -> mClickListener.onAddPlaylistClick(v));
+            return new PlaylistSelectorAdapter.ViewHolder(view, null);
+        }
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        MediaDescriptionCompat md = mDataset.get(position);
+        final int offSetPosition = position-1;
+        if(offSetPosition == -1) /* Add Playlist Item */return;
+
+        MediaDescriptionCompat md = mDataset.get(offSetPosition);
         holder.mMediaDescription = md;
         holder.mLayoutBinding.displayName.setText(md.getTitle());
         Bitmap thumb = md.getIconBitmap();
@@ -69,6 +87,6 @@ public class PlaylistSelectorAdapter extends RecyclerView.Adapter<PlaylistSelect
     
     @Override
     public int getItemCount() {
-        return mDataset.size();
+        return mDataset.size()+/* add playlist item */1;
     }
 }

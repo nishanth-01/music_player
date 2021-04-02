@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FF000000"
+    android:background="@color/comman_grey"
     xmlns:tools="http://schemas.android.com/tools">
     
     <androidx.appcompat.widget.AppCompatEditText android:id="@+id/search_bar" 
@@ -23,7 +23,7 @@
     <View android:id="@+id/list_bg"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="#303030"
+        android:background="@color/comman_black"
         
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

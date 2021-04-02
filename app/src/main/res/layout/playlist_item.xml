@@ -29,9 +29,11 @@
         android:textSize="@dimen/playlist_item_display_name_size"
         android:fontFamily="@font/open_sans_bold"
         android:textColor="@color/white"
+        android:maxLines="2"
+        android:ellipsize="end"
 
         app:layout_constraintBottom_toBottomOf="@id/display_icon"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/play"
         app:layout_constraintStart_toEndOf="@id/display_icon"
         app:layout_constraintTop_toTopOf="@id/display_icon" />
 

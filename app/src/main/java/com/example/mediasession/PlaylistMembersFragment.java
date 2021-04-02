@@ -30,7 +30,7 @@ public class PlaylistMembersFragment extends Fragment implements ClickInterface 
     private static final String KEY_PLAYLIST_ID = "key_playlist_id";
 
     private String mPlaylistId;
-    private FragmentPlaylistMembersBinding mLayoutBinding;
+    private com.example.mediasession.databinding.FragmentPlaylistMembersBinding mLayoutBinding;
     private MainSharedViewModel mSharedVM;
     private Observer<List<MediaBrowserCompat.MediaItem>> mPlaylistObserver;
     
@@ -118,8 +118,7 @@ public class PlaylistMembersFragment extends Fragment implements ClickInterface 
         mLayoutBinding = FragmentPlaylistMembersBinding.inflate(inflater, container, false);
         mLayoutBinding.playPlaylist.setVisibility(View.GONE);
         mLayoutBinding.mainList.setLayoutManager(new LinearLayoutManager(getContext()));
-        mLayoutBinding.playlistName.setText("Playlist");
-        
+
         mPopup = new PopupMenu(getContext(), mLayoutBinding.options);
         MenuInflater menuInflater = mPopup.getMenuInflater();
         menuInflater.inflate(R.menu.fragment_playlist_members_options, mPopup.getMenu());
@@ -144,7 +143,9 @@ public class PlaylistMembersFragment extends Fragment implements ClickInterface 
     @Override
     public void onStop() {
         super.onStop();
-        if(mSubscribed) mSharedVM.unsubscribePlaylistMember(mPlaylistId, mSubCallback);
+        try {
+            mSharedVM.unsubscribePlaylistMember(mPlaylistId, mSubCallback);
+        } catch (Exception e){ /* do nothing */ }
     }
 
     @Override
