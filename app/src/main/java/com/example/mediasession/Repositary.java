@@ -52,7 +52,8 @@ class Repositary {
 
     static final int MAX_NUMBER_OF_PLAYLIST = 99;
     static final int MAX_NUMBER_OF_PLAYLIST_MEMBER = 200;
-    
+    static final int MAX_PLAYLIST_NAME_CHARACTERS = 30;
+
     static final char MEMBER_URI_SEPERATOR = ' '/* A SPACE */;
     
     private static final String[] LOCAL_MEDIA_QUERY_PROJECTION = new String[] {MediaStore.Audio.Media._ID , MediaStore.Audio.Media.DISPLAY_NAME };
@@ -290,13 +291,19 @@ class Repositary {
                       @NonNull MediaBrowserServiceCompat.Result<Bundle> result)
             throws IllegalArgumentException{
         //TODO : check how long this method takes to calculate MAX_NUMBER_OF_PLAYLIST_MEMBER entities
-        if(playlistName == null || result == null) throw new IllegalArgumentException();
-        if(playlistName.isEmpty()) { result.sendError(null); return; }//dont allow empty name
+        if(playlistName == null || playlistName.isEmpty()) {
+            result.sendError(null); return;
+        }//dont allow empty name
 
         if(mPlaylistCount > MAX_NUMBER_OF_PLAYLIST) { result.sendError(null); return; }
 
         if(mIsNameAlreadyExist(playlistName, mAllPlaylistEntityMap.values())) {
             result.sendError(null); return;
+        }
+
+        if(playlistName.length() > MAX_PLAYLIST_NAME_CHARACTERS){
+            result.sendError(null); return;
+            //TODO : send error with error code
         }
 
         final PlaylistEntity playlistEntity =

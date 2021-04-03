@@ -62,6 +62,11 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
                 //if(dy > -1) mLayout.searchBarHolder.setVisibility(View.GONE);
                 //else mLayout.searchBarHolder.setVisibility(View.VISIBLE);
             }
+
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
         };
         
         mPlaylistSelectorResultListener = new FragmentResultListener(){

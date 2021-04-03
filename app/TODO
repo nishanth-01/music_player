@@ -17,7 +17,7 @@ Fix - Back Press
     - make sure Popbackstack removes the intented fragment
 
 TODO
-    - Add "add playlist" button to PlaylistSelectorFragment
+    - add playlist name verification to AddPlaylistFragment(name size, unique name etc...)
     - Add Multi Select Options to PlaylistSelectorFragment
     - Rebuild PlaylistSelectorFragment UI(use a semi transparent, non fullscreen fragment)
     - Limit the no.of characters allowed for playlist name
