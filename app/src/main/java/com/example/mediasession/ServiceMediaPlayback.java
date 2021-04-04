@@ -11,6 +11,8 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
@@ -33,6 +35,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContentResolverCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.media.MediaBrowserServiceCompat;
 import androidx.media.session.MediaButtonReceiver;
 import androidx.room.Room;
@@ -430,7 +433,10 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                         albumArt = getContentResolver().loadThumbnail(albumArtUri,
                                 new Size(albumArtSize, albumArtSize), null);
                     } catch (IOException e){
-                        Log.e(TAG, "IOException failed to load AlbumArt");e.printStackTrace();
+                        Log.e(TAG, "IOException failed to load AlbumArt");
+                    }
+                    if(albumArt == null) {
+                        //TODO
                     }
                     mSessionMetaDataBuilder
                             .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE,
