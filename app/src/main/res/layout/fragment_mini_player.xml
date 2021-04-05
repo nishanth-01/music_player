@@ -1,96 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mini_player"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="bottom"
-    android:layout_margin="0dp"
-    android:background="#212121">
+    android:background="@color/comman_grey">
 
     <ImageView
-        android:id="@+id/albumrt_thumbnail"
-        android:layout_width="@dimen/mc_icon_sides"
-        android:layout_height="@dimen/mc_icon_sides"
-        android:layout_margin="0dp"
+        android:id="@+id/albumrt"
+        android:layout_width="@dimen/fragment_mini_player_icon_sides"
+        android:layout_height="@dimen/fragment_mini_player_icon_sides"
 
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+
+        tools:src="@drawable/ic_default_albumart_thumb" />
 
     <TextView
-        android:id="@+id/title_text"
+        android:id="@+id/title"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="0dp"
+        android:layout_height="wrap_content"
+        android:padding="1dp"
+        android:singleLine="true"
         android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
         android:fontFamily="@font/roboto_medium_numbers"
+        android:textColor="@color/white"
+        android:textSize="@dimen/fragment_mini_player_title_size"
+
+        app:layout_constraintEnd_toStartOf="@id/play_previous"
+        app:layout_constraintStart_toEndOf="@id/albumrt"
+        app:layout_constraintTop_toTopOf="@id/albumrt"
+        tools:text="Perfect" />
+
+    <TextView
+        android:id="@+id/artist"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="1dp"
+        android:textColor="@color/white"
+        android:textSize="@dimen/fragment_mini_player_artist_name_size"
+
+        android:ellipsize="marquee"
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
-        android:text="title"
-        android:textColor="@color/white"
-        android:textSize="19sp"
-        android:paddingStart="5dp"
-        android:paddingEnd="5dp"
-        android:paddingTop="3dp"
 
-        app:layout_constraintVertical_chainStyle="packed"
-        app:layout_constraintBottom_toTopOf="@id/artist_text"
-        app:layout_constraintEnd_toStartOf="@id/mc_queue_button"
-        app:layout_constraintStart_toEndOf="@id/albumrt_thumbnail"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/artist_text"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-
-        android:ellipsize="marquee"
-        android:marqueeRepeatLimit="marquee_forever"
-        android:text="artist"
-        android:textColor="@color/white"
-        android:textSize="12dp"
-        android:paddingStart="5dp"
-        android:paddingEnd="5dp"
-        android:paddingBottom="3dp"
-
-        app:layout_constraintVertical_chainStyle="packed"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@id/title_text"
-        app:layout_constraintLeft_toLeftOf="@id/title_text"
-        app:layout_constraintStart_toStartOf="@id/title_text"
-        app:layout_constraintTop_toBottomOf="@id/title_text" />
+        app:layout_constraintEnd_toStartOf="@id/play_previous"
+        app:layout_constraintStart_toEndOf="@id/albumrt"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        tools:text="Ed sheeren" />
 
     <ImageView
-        android:id="@+id/mc_play_pause"
-        android:layout_width="@dimen/mc_icon_sides"
-        android:layout_height="@dimen/mc_icon_sides"
+        android:id="@+id/play_previous"
+        android:layout_width="@dimen/fragment_mini_player_icon_sides"
+        android:layout_height="@dimen/fragment_mini_player_icon_sides"
+        android:padding="10dp"
+        android:src="@drawable/exo_controls_previous"
+
+        app:layout_constraintBottom_toBottomOf="@id/albumrt"
+        app:layout_constraintEnd_toStartOf="@id/play_pause"
+        app:layout_constraintTop_toTopOf="@id/albumrt" />
+
+    <ImageView
+        android:id="@+id/play_pause"
+        android:layout_width="@dimen/fragment_mini_player_icon_sides"
+        android:layout_height="@dimen/fragment_mini_player_icon_sides"
         android:padding="10dp"
         android:src="@drawable/exo_controls_play"
 
-        app:layout_constraintBottom_toBottomOf="@id/albumrt_thumbnail"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/albumrt_thumbnail" />
+        app:layout_constraintTop_toTopOf="@id/albumrt"
+        app:layout_constraintBottom_toBottomOf="@id/albumrt"
+        app:layout_constraintEnd_toStartOf="@id/play_next"/>
 
     <ImageView
-        android:id="@+id/mc_queue_button"
-        android:layout_width="@dimen/mc_icon_sides"
-        android:layout_height="@dimen/mc_icon_sides"
-        android:padding="13dp"
-        android:src="@drawable/exo_ic_audiotrack"
+        android:id="@+id/play_next"
+        android:layout_width="@dimen/fragment_mini_player_icon_sides"
+        android:layout_height="0dp"
+        android:padding="10dp"
+        android:src="@drawable/exo_controls_next"
 
-        app:layout_constraintBottom_toBottomOf="@id/albumrt_thumbnail"
-        app:layout_constraintEnd_toStartOf="@id/mc_play_pause"
-        app:layout_constraintTop_toTopOf="@id/albumrt_thumbnail" />
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="1px"
-        android:background="@color/white"
-
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintTop_toTopOf="@id/albumrt"
+        app:layout_constraintBottom_toBottomOf="@id/albumrt"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

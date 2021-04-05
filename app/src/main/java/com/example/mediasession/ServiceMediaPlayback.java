@@ -78,11 +78,12 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     static final String ACTION_ADD_PLAYLIST = "1";
     static final String ACTION_PLAY_PLAYLIST = "2";
     static final String ACTION_REMOVE_PLAYLIST = "3";
-    static final String ACTION_REMOVE_QUEUE_ITEM = "4";
-    static final String ACTION_ADD_PLAYLIST_MEMBER = "5";
-    static final String ACTION_REMOVE_PLAYLIST_MEMBER = "6";
-    static final String ACTION_INCLUDE_INTERNAL_STOARAGE = "7";
-    
+    static final String ACTION_TOGGLE_PLAY_PAUSE = "4";
+    static final String ACTION_REMOVE_QUEUE_ITEM = "5";
+    static final String ACTION_ADD_PLAYLIST_MEMBER = "6";
+    static final String ACTION_REMOVE_PLAYLIST_MEMBER = "7";
+    static final String ACTION_INCLUDE_INTERNAL_STOARAGE = "8";
+
     /** CADK - Custom Action Data Key **/
     static final String CADK_QUEUE_ID = "01";
     static final String CADK_PLAYLIST_MEMBER_ID = "02";
@@ -90,7 +91,10 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     static final String CADK_PLAYLIST_NAME = "04";
     static final String CADK_INCLUDE_INTERNAL_STORAGE_BOOLEAN = "05";
 
-    static final String EXTRAS_KEY_PLAYER_STATE = "exoplayer_state";
+    /* Use conanical name to avoid conflicks */
+    static final String EXTRAS_KEY_PLAYER_STATE = TAG+"el_3";
+    static final String EXTRAS_KEY_HAS_NEXT = TAG+"ek_1";
+    static final String EXTRAS_KEY_HAS_PREVIOUS = TAG+"ek_2";
 
     private ContentResolver mContentResolver;
     private ContentObserver mInternalContentObserver;
@@ -127,6 +131,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     private PlayerNotificationManager mPlayerNotification ; //Notification
 
     private final MediaDescriptionCompat.Builder mMediaDiscriptionBuilder = new MediaDescriptionCompat.Builder();
+    private final Bundle EXTRAS_BUNDLE = new Bundle();
 
     private MediaMetadataCompat mCurrentMetaData;   //only for mGetMetadataFrom
 
@@ -328,22 +333,41 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                 .setAllowedCapturePolicy(C.ALLOW_CAPTURE_BY_ALL).setUsage(C.USAGE_MEDIA);
         mPlayer.setAudioAttributes(audioAttributesBuilder.build() , true );
         mPlayer.setHandleAudioBecomingNoisy(true);
-        mPlayer.addListener( new Player.EventListener() {
+        mPlayer.addListener(new Player.EventListener() {
             @Override
             public void onPlaybackStateChanged(int state) {
                 switch (state){
                     case Player.STATE_IDLE: {
                         mReciveTransportControlls = false; mPlayer.setPlayWhenReady(false);
+
+                        mSessionStateBuilder.setState(PlaybackStateCompat.STATE_NONE, 0,
+                                mPlayer.getPlaybackParameters().speed);
+                        mMediaSession.setPlaybackState(mSessionStateBuilder.build());
                         break;
                     }
-                    case Player.STATE_BUFFERING: break;
-                    case Player.STATE_READY: break;
+                    case Player.STATE_BUFFERING: {
+                        mSessionStateBuilder.setState(PlaybackStateCompat.STATE_BUFFERING,
+                                mPlayer.getCurrentPosition(), mPlayer.getPlaybackParameters().speed);
+                        mMediaSession.setPlaybackState(mSessionStateBuilder.build());
+                        break;
+                    }
+                    case Player.STATE_READY: {
+                        int playbackState = PlaybackStateCompat.STATE_NONE;
+                        if(mPlayer.isPlaying()) playbackState  = PlaybackStateCompat.STATE_PLAYING;
+                        else playbackState  = PlaybackStateCompat.STATE_PAUSED;
+                        mSessionStateBuilder.setState(playbackState,
+                                mPlayer.getCurrentPosition(), mPlayer.getPlaybackParameters().speed);
+                        mMediaSession.setPlaybackState(mSessionStateBuilder.build());
+                        break;
+                    }
                     case Player.STATE_ENDED: {
                         mPlayer.setPlayWhenReady(false);
                         try{
-                            mPlayer.seekTo(0, C.TIME_UNSET);
+                            mPlayer.seekTo(0, C.TIME_UNSET); mPlayer.prepare();
                         } catch (IllegalSeekPositionException e){
-                            //do nothing
+                            mSessionStateBuilder.setState(PlaybackStateCompat.STATE_STOPPED,
+                                    0, mPlayer.getPlaybackParameters().speed);
+                            mMediaSession.setPlaybackState(mSessionStateBuilder.build());
                         }
                         break;
                     }
@@ -352,36 +376,42 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
 
             @Override
             public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
-                /*try{
-                    mPlayer.prepare();
-                    if(playWhenReady) mPlayer.seekTo(mPlayer.getCurrentWindowIndex(), C.TIME_UNSET);
-                } catch (IllegalSeekPositionException e){
-                    //do nothing
-                }*/
-                if(playWhenReady) mPlayer.prepare();
-
-                Bundle bundle = new Bundle(1);
-                bundle.putBoolean(EXTRAS_KEY_PLAY_WHEN_READY, playWhenReady);
-                mSessionStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
-                        mPlayer.getCurrentPosition(), mPlayer.getPlaybackParameters().speed)
-                        .setExtras(bundle);
-                mMediaSession.setPlaybackState(mSessionStateBuilder.build());
+                //if(playWhenReady) mPlayer.prepare();
             }
 
             @Override
             public void onIsPlayingChanged(boolean isPlaying) {
-                if(isPlaying) {
-                    mSessionStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
-                            mPlayer.getCurrentPosition(), mPlayer.getPlaybackParameters().speed);
-                    mMediaSession.setPlaybackState(mSessionStateBuilder.build());
+                int playbackState = PlaybackStateCompat.STATE_NONE;
+                long position = 0;
+                if(isPlaying){
+                    playbackState = PlaybackStateCompat.STATE_PLAYING;
+                    position = mPlayer.getCurrentPosition();
+                } else {
+                    switch (mPlayer.getPlaybackState()){
+                        case(Player.STATE_READY):{
+                            playbackState = PlaybackStateCompat.STATE_PAUSED;
+                            position = mPlayer.getCurrentPosition();
+                            break;
+                        }
+                        case(Player.STATE_BUFFERING):{
+                            playbackState = PlaybackStateCompat.STATE_BUFFERING;
+                            position = mPlayer.getCurrentPosition();
+                            break;
+                        }
+                        case(Player.STATE_ENDED):{
+                            playbackState = PlaybackStateCompat.STATE_STOPPED;
+                            break;
+                        }
+                    }
                 }
+                mSessionStateBuilder.setState(playbackState, position, mPlayer.getPlaybackParameters().speed);
+                mMediaSession.setPlaybackState(mSessionStateBuilder.build());
             }
 
             @Override
             public void onPlayerError(ExoPlaybackException error) {
-                Log.e(LT.IP, "ExoPlaybackException");
-                error.printStackTrace();
-                Toast.makeText(ServiceMediaPlayback.this, "onPlayerError occured", Toast.LENGTH_SHORT).show();
+                Log.e(LT.IP, "onPlayerError");
+                Toast.makeText(ServiceMediaPlayback.this, "Error!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -391,17 +421,21 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
 
             @Override
             public void onTimelineChanged(Timeline timeline, int reason) {
-                Log.w(TAG, LT.UNTESTED+"onTimelineChanged");
+                //TODO : test
                 if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED){
                     if(timeline.isEmpty()){
                         mReciveTransportControlls = false;
-                        mMediaSession.setQueue(new ArrayList<>());
+                        mMediaSession.setQueue(new ArrayList<>(0));
+                        mUpdateTransportControllsData(true);
                         return;
                     }
                     mReciveTransportControlls = true;
+
+                    mUpdateTransportControllsData(false);
+
                     int windowCount = timeline.getWindowCount();
                     List<MediaSessionCompat.QueueItem> queue = new ArrayList<>(windowCount);
-                    Log.w(TAG, LT.TEMP_IMPLEMENTATION+"manage queue id properly");
+                    //TODO : manage queue id properly
                     for(int i=0; i<windowCount; i++){
                         Timeline.Window window = timeline.getWindow(i, new Timeline.Window());
                         MediaBrowserCompat.MediaItem mediaItem =
@@ -412,9 +446,9 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                     }
                     mMediaSession.setQueue(queue);
                 } else if (reason == Player.TIMELINE_CHANGE_REASON_SOURCE_UPDATE){
-
+                    //TODO
                 } else {
-
+                    //TODO
                 }
             }
 
@@ -424,10 +458,12 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
 
                 Log.w(TAG, LT.TEMP_IMPLEMENTATION+"check if metadata is updated preperly");
                 if (mediaItem != null) {
+                    mUpdateTransportControllsData(false);
+
                     MediaBrowserCompat.MediaItem mediaItem1 =
                             mSharedStorageAudioMap.get(mediaItem.mediaId);
                     final MediaDescriptionCompat md = mediaItem1.getDescription();
-                    int albumArtSize = getResources().getDimensionPixelSize(R.dimen.player_main_albumart_sides);
+                    int albumArtSize = getResources().getDimensionPixelSize(R.dimen.fragment_player_albumart_sides);
                     final Uri albumArtUri = md.getMediaUri(); Bitmap albumArt = null;
                     try{
                         albumArt = getContentResolver().loadThumbnail(albumArtUri,
@@ -445,13 +481,15 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                                     md.getExtras().getString(MediaStore.Audio.Media.ARTIST))
                             .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt);
                 } else {
+                    mUpdateTransportControllsData(true);
+
                     mSessionMetaDataBuilder
                             .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, null)
                             .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, null)
                             .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, null);
                 }
                 mCurrentMetaData = mSessionMetaDataBuilder.build();
-                mMediaSession.setMetadata(mSessionMetaDataBuilder.build());
+                mMediaSession.setMetadata(mCurrentMetaData);
             }
         });
         //_____________________
@@ -603,9 +641,20 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     @Override
     public void onCustomAction(@NonNull String action, Bundle extras, @NonNull Result<Bundle> result) {
         switch (action){
+            case ACTION_TOGGLE_PLAY_PAUSE: {
+                if(mPlayer.isPlaying()){ mPlayer.pause(); result.sendResult(null); return; }
+                if(mPlayer.getPlaybackState() == Player.STATE_READY){
+                    mPlayer.play(); result.sendResult(null);
+                } else {
+                    //TODO : check and handle
+                    result.sendError(null);
+                }
+                return;
+            }
             case ACTION_INCLUDE_INTERNAL_STOARAGE: {
                 boolean include = extras.getBoolean(CADK_INCLUDE_INTERNAL_STORAGE_BOOLEAN, false);
                 //TODO - IMP : try observing the shared preference ,if can remove this from custom action
+                result.sendError(null);
                 return;
             }
             case ACTION_REMOVE_QUEUE_ITEM: {
@@ -724,6 +773,24 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
             Log.d(TAG, "a"+members.toString());
             notifyChildrenChanged(mediaId, Bundle.EMPTY);
         }
+    }
+
+    private void mUpdateTransportControllsData(boolean clear){
+        if(clear){
+            EXTRAS_BUNDLE.putBoolean(EXTRAS_KEY_HAS_NEXT, false);
+            EXTRAS_BUNDLE.putBoolean(EXTRAS_KEY_HAS_PREVIOUS, false);
+            mMediaSession.setExtras(EXTRAS_BUNDLE);
+            return;
+        }
+        int currentWindowIndex = mPlayer.getCurrentWindowIndex();
+        int lastWindowIndex = mPlayer.getCurrentTimeline().getWindowCount() - 1;
+                    /*Log.d(TAG, "currentIndex:"+Integer.toString(currentWindowIndex)
+                            +" lastIndex:"+Integer.toString(lastWindowIndex));*/
+        EXTRAS_BUNDLE.putBoolean(EXTRAS_KEY_HAS_NEXT,
+                (currentWindowIndex > -1 && currentWindowIndex < lastWindowIndex) ? true : false);
+        EXTRAS_BUNDLE.putBoolean(EXTRAS_KEY_HAS_PREVIOUS,
+                currentWindowIndex > 0 ? true : false);
+        mMediaSession.setExtras(EXTRAS_BUNDLE);
     }
 
     //exoplayer handles the audio focus , see (SimpleExoPlayer Instance).setAudioAttributes

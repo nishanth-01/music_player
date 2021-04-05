@@ -4,13 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/fragment_queue_bg"
+    android:background="@color/comman_black"
     android:clickable="true">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/list"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:paddingTop="10dp"
 
         app:layout_constraintBottom_toTopOf="@id/controlls_bg"
         app:layout_constraintEnd_toEndOf="parent"
@@ -24,7 +25,7 @@
         android:id="@+id/controlls_bg"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="#131313"
+        android:background="@color/comman_grey"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

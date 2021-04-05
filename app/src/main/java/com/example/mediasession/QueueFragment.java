@@ -1,5 +1,7 @@
 package com.example.mediasession;
 
+import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -22,14 +24,37 @@ import java.util.List;
 
 /*this should be singleton .if not setQueueObserver wont work properly*/
 public class QueueFragment extends Fragment {
+    public static final String TAG = QueueFragment.class.getCanonicalName();
+
+    private final int ENABLED_BUTTON_ALPHA = 255;
+    private final int DISABLED_BUTTON_ALPHA = 255/2;
+
+    private Drawable mPlayIcon;
+    private Drawable mPauseIcon;
+
     private FragmentQueueBinding mLayoutBinding;
     private MainSharedViewModel mMainSharedVM;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        final Resources resources = getResources();
+        mPlayIcon = ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_play_circle_filled, null);
+        mPauseIcon = ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_pause_circle_filled, null);
+
         mMainSharedVM = new ViewModelProvider(getActivity())
                 .get(MainActivity.MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
+
+        mMainSharedVM.getExtrasLD().observe(QueueFragment.this, bundle -> {
+            final boolean hasNext = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_NEXT, false);
+            final boolean hasPrevious = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_PREVIOUS, false);
+
+            if(hasNext == true) mLayoutBinding.playNext.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            else mLayoutBinding.playNext.setImageAlpha(DISABLED_BUTTON_ALPHA);
+            if(hasPrevious == true) mLayoutBinding.playPrevious.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            else mLayoutBinding.playPrevious.setImageAlpha(DISABLED_BUTTON_ALPHA);
+        });
     }
 
     @Nullable
@@ -66,18 +91,23 @@ public class QueueFragment extends Fragment {
         mMainSharedVM.getPlaybackStateLD().observe(this, new Observer<PlaybackStateCompat>() {
             @Override
             public void onChanged(PlaybackStateCompat stateCompat) {
-                //dont check for null
-                final Bundle extras = stateCompat.getExtras();
-                boolean playWhenReady = false;
-                if(extras!=null){
-                    playWhenReady =
-                            extras.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_PLAY_WHEN_READY, false);
+                if(stateCompat.getState() == PlaybackStateCompat.STATE_PLAYING){
+                    mLayoutBinding.playPause.setImageDrawable(mPauseIcon);
+                } else if(stateCompat.getState() == PlaybackStateCompat.STATE_BUFFERING){
+                    //TODO : show buffer ring
+                } else {
+                    mLayoutBinding.playPause.setImageDrawable(mPlayIcon);
                 }
-                int resId = playWhenReady ? R.drawable.exo_ic_pause_circle_filled
-                        : R.drawable.exo_ic_play_circle_filled;
-                mLayoutBinding.playPause
-                        .setImageDrawable(ResourcesCompat.getDrawable(getResources(), resId, null));
             }
+        });
+        mMainSharedVM.getExtrasLD().observe(QueueFragment.this, bundle -> {
+            final boolean hasNext = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_NEXT, false);
+            final boolean hasPrevious = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_PREVIOUS, false);
+
+            if(hasNext == true) mLayoutBinding.playNext.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            else mLayoutBinding.playNext.setImageAlpha(DISABLED_BUTTON_ALPHA);
+            if(hasPrevious == true) mLayoutBinding.playPrevious.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            else mLayoutBinding.playPrevious.setImageAlpha(DISABLED_BUTTON_ALPHA);
         });
     }
 
@@ -85,12 +115,14 @@ public class QueueFragment extends Fragment {
     public void onStop() {
         mMainSharedVM.getPlaybackStateLD().removeObservers(this);
         mMainSharedVM.getQueueLD().removeObservers(this);
+        mMainSharedVM.getExtrasLD().removeObservers(this);
         super.onStop();
     }
 
     @Override
     public void onDestroy() {
-        mMainSharedVM = null;
         super.onDestroy();
+        mMainSharedVM.getExtrasLD().removeObservers(this);
+        mMainSharedVM = null;
     }
 }

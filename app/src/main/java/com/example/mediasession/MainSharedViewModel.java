@@ -10,7 +10,6 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -26,9 +25,6 @@ import java.util.List;
 public class MainSharedViewModel extends AndroidViewModel {
     private static final String TAG = "MainSharedViewModel";
 
-    //update properly
-    private boolean mPlayWhenReady;
-
     private final MutableLiveData<MediaMetadataCompat> mMetadataMLD = new MutableLiveData<>();
     private final MutableLiveData<PlaybackStateCompat> mPlaybackStateMLD = new MutableLiveData<>();
     private final MutableLiveData<Byte> mServiceConnectionStatusMLD = new MutableLiveData<>((byte) 0);
@@ -39,6 +35,7 @@ public class MainSharedViewModel extends AndroidViewModel {
             new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<List<MediaBrowserCompat.MediaItem>> mAllPlaylistsMLD =
             new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<Bundle> mExtrasMLD = new MutableLiveData<>(Bundle.EMPTY);
 
     private Context mApplicationContext;
 
@@ -57,14 +54,11 @@ public class MainSharedViewModel extends AndroidViewModel {
         mBrowserConnectionCallback = new MediaBrowserCompat.ConnectionCallback(){
             @Override
             public void onConnected() {
-                mMediaController =
-                        new MediaControllerCompat(mApplicationContext, mMediaBrowser.getSessionToken());
+                mMediaController = new MediaControllerCompat(mApplicationContext, mMediaBrowser.getSessionToken());
                 if(mMediaControllerCallback == null) {
                     mMediaControllerCallback = new MediaControllerCompat.Callback() {
                         @Override
                         public void onPlaybackStateChanged(PlaybackStateCompat state) {
-                            mPlayWhenReady = state.getExtras()
-                                    .getBoolean(ServiceMediaPlayback.EXTRAS_KEY_PLAY_WHEN_READY, false);
                             mPlaybackStateMLD.setValue(state);
                         }
 
@@ -74,9 +68,7 @@ public class MainSharedViewModel extends AndroidViewModel {
                         }
 
                         @Override
-                        public void onExtrasChanged(Bundle extras) {
-
-                        }
+                        public void onExtrasChanged(Bundle extras) { mExtrasMLD.setValue(extras); }
 
                         @Override
                         public void onQueueChanged(List<MediaSessionCompat.QueueItem> queue) {
@@ -137,6 +129,11 @@ public class MainSharedViewModel extends AndroidViewModel {
     @NonNull
     LiveData<PlaybackStateCompat> getPlaybackStateLD(){
         return (LiveData)mPlaybackStateMLD;
+    }
+
+    @NonNull
+    LiveData<Bundle> getExtrasLD(){
+        return (LiveData)mExtrasMLD;
     }
 
     @NonNull
@@ -246,9 +243,8 @@ public class MainSharedViewModel extends AndroidViewModel {
     }
 
     void togglePlayPause(){
-        if(mMediaController!=null){
-            MediaControllerCompat.TransportControls tc = mMediaController.getTransportControls();
-            if(mPlayWhenReady) tc.pause();else tc.play();
+        if(mMediaBrowser != null){
+            mMediaBrowser.sendCustomAction(ServiceMediaPlayback.ACTION_TOGGLE_PLAY_PAUSE, null, null);
         } else {
             Log.w(TAG, LT.UNIMPLEMENTED+"togglePlayPause, mMediaController is null");
         }

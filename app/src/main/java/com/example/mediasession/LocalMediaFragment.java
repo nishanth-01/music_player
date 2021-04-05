@@ -29,7 +29,8 @@ import java.util.List;
 
 public class LocalMediaFragment extends Fragment implements ClickInterface {
     //TODO : notify user is list is empty
-    public static final String TAG = "LocalMediaFragment";
+    public static final String TAG = LocalMediaFragment.class.getCanonicalName();
+
     static final String PLAYLIST_SELECTOR_RESULT_KEY = "playlist_selector_result_key";
     static final String PLAYLIST_SELECTOR_REQUEST_KEY = "playlist_selector_request_key";
     

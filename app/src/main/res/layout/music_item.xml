@@ -5,13 +5,15 @@
 
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginBottom="23dp"
+    android:layout_marginEnd="16dp"
     android:background="@color/music_item_bg">
     <!-- replace with boxed icon -->
     <ImageView
         android:id="@+id/display_icon"
         android:layout_width="@dimen/music_item_display_icon_sides"
         android:layout_height="@dimen/music_item_display_icon_sides"
-        android:layout_margin="@dimen/music_item_display_icon_margin"
         android:background="@color/exo_gray"
 
         app:layout_constraintBottom_toBottomOf="parent"
@@ -30,8 +32,10 @@
         android:textAlignment="textStart"
         android:textColor="#F8F8FF"
         android:textSize="@dimen/music_item_title_textsize"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="3dp"
+        android:paddingTop="3dp"
 
         app:layout_constraintVertical_chainStyle="packed"
         app:layout_constraintBottom_toTopOf="@id/textview_artist"
@@ -47,7 +51,10 @@
         android:textAlignment="textStart"
         android:textColor="#e0e0e0"
         android:textSize="@dimen/music_item_artist_name_textsize"
-        android:paddingStart="8dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="3dp"
+        android:paddingTop="3dp"
 
         app:layout_constraintVertical_chainStyle="packed"
         app:layout_constraintBottom_toBottomOf="@id/display_icon"
@@ -60,8 +67,7 @@
         android:id="@+id/options"
         android:layout_width="@dimen/music_item_options_width"
         android:layout_height="0dp"
-        android:padding="@dimen/music_item_options_padding"
-        android:src="@drawable/ic_triple_dot"
+        android:src="@drawable/ic_triple_dot_small"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
