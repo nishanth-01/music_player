@@ -3,13 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/fragment_player_bg">
+    android:padding="30dp"
+    android:background="@color/comman_black" >
 
     <ImageView
         android:id="@+id/albumart"
-        android:layout_width="@dimen/player_main_albumart_sides"
-        android:layout_height="@dimen/player_main_albumart_sides"
-        android:layout_marginTop="30dp"
+        android:layout_width="@dimen/fragment_player_albumart_sides"
+        android:layout_height="@dimen/fragment_player_albumart_sides"
+        android:layout_marginTop="20dp"
         android:src="@drawable/exo_ic_default_album_image"
         android:background="@color/white"
 
@@ -18,16 +19,17 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/display_name"
+        android:id="@+id/title"
         android:layout_width="350dp"
         android:layout_height="wrap_content"
+        android:padding="8dp"
         android:ellipsize="marquee"
-        android:fontFamily="@font/roboto_medium_numbers"
+        android:fontFamily="@font/open_sans_bold"
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
         android:text="Sample Display Name"
         android:textColor="@color/white"
-        android:textSize="@dimen/fragment_player_display_name_size"
+        android:textSize="@dimen/fragment_player_title_size"
 
         app:layout_constraintBottom_toTopOf="@id/artist"
         app:layout_constraintEnd_toEndOf="@id/albumart"
@@ -38,8 +40,9 @@
         android:id="@+id/artist"
         android:layout_width="350dp"
         android:layout_height="wrap_content"
+        android:padding="8dp"
         android:ellipsize="marquee"
-        android:fontFamily="@font/roboto_medium_numbers"
+        android:fontFamily="@font/open_sans_bold"
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
         android:text="Dr.Dre"
@@ -48,49 +51,51 @@
 
         app:layout_constraintEnd_toEndOf="@id/albumart"
         app:layout_constraintStart_toStartOf="@id/albumart"
-        app:layout_constraintTop_toBottomOf="@id/display_name" />
+        app:layout_constraintTop_toBottomOf="@id/title" />
     <ImageView
-        android:id="@+id/controlls_previous_button"
+        android:id="@+id/play_previous"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="15dp"
-        android:src="@drawable/exo_controls_previous"
-        app:layout_constraintBottom_toBottomOf="@+id/controlls_play_pause_button"
-        app:layout_constraintEnd_toStartOf="@+id/controlls_play_pause_button"
+        android:padding="10dp"
+        android:src="@drawable/exo_styled_controls_previous"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause"
+        app:layout_constraintEnd_toStartOf="@id/play_pause"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/controlls_play_pause_button" />
+        app:layout_constraintTop_toTopOf="@id/play_pause" />
 
     <ImageView
-        android:id="@+id/controlls_play_pause_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="15dp"
-        android:src="@drawable/exo_controls_play"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/controlls_next_button"
-        app:layout_constraintStart_toEndOf="@id/controlls_previous_button"
+        android:id="@+id/play_pause"
+        android:layout_width="58dp"
+        android:layout_height="58dp"
+        android:src="@drawable/exo_ic_play_circle_filled"
+        app:layout_constraintBottom_toTopOf="@+id/queue"
+        app:layout_constraintEnd_toStartOf="@id/play_next"
+        app:layout_constraintStart_toEndOf="@id/play_previous"
         app:layout_constraintTop_toBottomOf="@id/artist" />
     <ImageView
-        android:id="@+id/controlls_next_button"
+        android:id="@+id/play_next"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="15dp"
-        android:src="@drawable/exo_controls_next"
-        app:layout_constraintBottom_toBottomOf="@+id/controlls_play_pause_button"
+        android:padding="10dp"
+        android:src="@drawable/exo_styled_controls_next"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/controlls_play_pause_button"
-        app:layout_constraintTop_toTopOf="@id/controlls_play_pause_button" />
+        app:layout_constraintStart_toEndOf="@id/play_pause"
+        app:layout_constraintTop_toTopOf="@id/play_pause" />
 
     <Button
         android:id="@+id/queue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="@color/comman_grey"
+        android:fontFamily="@font/open_sans_bold"
         android:text="Queue"
+        android:textColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/controlls_next_button"
-        app:layout_constraintStart_toStartOf="@+id/controlls_previous_button"
-        app:layout_constraintTop_toBottomOf="@+id/controlls_play_pause_button" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

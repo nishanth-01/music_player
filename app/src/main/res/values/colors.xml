@@ -11,9 +11,9 @@
     <color name="comman_black">#000</color>
     <color name="comman_grey">#222</color>
 
-    <color name="main_bottom_nav_bg">@color/comman_grey</color>
     <color name="main_bottom_nav_divider_color">#424242</color>
-    <color name="bottom_nav_text_color">@color/white</color>
+    <color name="bottom_nav_text_color">#8FFF</color>
+    <color name="selected_bottom_nav_text_color">@color/white</color>
 
     <!--Local Media List Item-->
     <color name="music_item_options_ic_bg">#595959</color>
@@ -22,16 +22,9 @@
     <color name="tablayout_selected_text_color">#00fc54</color>
     <color name="tablayout_text_color">#adadad</color>
 
-    <!-- fragment_player -->
-    <color name="fragment_player_bg">@color/comman_black</color>
-
     <!-- fragment_queue-->
-    <color name="fragment_queue_bg">#222222</color>
     <color name="fragment_queue_controlls_bg">#DD000000</color>
 
     <!-- music_item -->
     <color name="music_item_bg">@color/comman_black</color>
-
-    <!-- playlist_item -->
-    <color name="playlist_item_bg_color">#0000</color>
 </resources>

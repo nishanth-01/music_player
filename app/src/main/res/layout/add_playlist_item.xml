@@ -7,19 +7,19 @@
     android:background="@drawable/add_playlist_item_bg"
 
     android:layout_marginTop="10dp"
-    android:layout_marginBottom="6dp"
-    android:layout_marginStart="6dp"
-    android:layout_marginEnd="6dp">
+    android:layout_marginBottom="10dp"
+    android:layout_marginStart="10dp"
+    android:layout_marginEnd="10dp">
 
     <TextView android:id="@+id/add_playlist"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="14dp"
 
-        android:text="Create Playlist"
-        android:textSize="16sp"
-        android:textColor="#EEFFFFFF"
-        android:fontFamily="@font/open_sans_bold"
+        android:text="New Playlist"
+        android:textSize="13sp"
+        android:textColor="#C0FFFFFF"
+        android:fontFamily="@font/roboto_medium_numbers"
 
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"

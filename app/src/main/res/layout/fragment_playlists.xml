@@ -15,7 +15,7 @@
         android:layout_marginTop="16dp"
         android:padding="10dp"
         android:background="@drawable/common_search_bar_bg"
-        android:textSize="23sp"
+        android:textSize="18sp"
         android:fontFamily="@font/open_sans_bold"
         android:hint="Search Playlists"
         android:textColorHint="#8888"

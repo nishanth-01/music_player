@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PlaylistsFragment extends Fragment implements PlaylistsAdapterInterface {
-    static final String TAG = "PlaylistsFragment";
+    public static final String TAG = PlaylistsFragment.class.getCanonicalName();
 
     private FragmentPlaylistsBinding mLayoutBinding;
     private MainSharedViewModel mSharedViewModel;

@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -15,6 +16,7 @@ import androidx.lifecycle.ViewModelProvider;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.os.Build;
@@ -59,11 +61,6 @@ public class MainActivity extends AppCompatActivity {
     static final String FRAGMENT_TAG_ADD_PLAYLIST = "frag_add_playlist";
 
     /*variables used for state status these variables have to be properly updated*/
-    private boolean isSessionActive;
-    private boolean mPlayWhenReady;/*state of exoplayer*/
-    /**This is not the current state of playerview ,its the required state.
-     * true - expanded ; false - minimized ; null - controller not onscreen**/
-    private byte mRequiredPlayerViewState;
     private Fragment mCurrentBNFrag;
     /* _________________ */
 
@@ -99,63 +96,33 @@ public class MainActivity extends AppCompatActivity {
         mMainSharedVM = new ViewModelProvider(this)
                 .get(MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
 
-        /*TODO : research more and add proper transperent status bar*/
-        /*Log.w(TAG ,
-                LT.TEMP_IMPLEMENTATION+"research more and add proper transperent status bar");
-        View view = getWindow().getDecorView();
-        view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-        view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        Window window = getWindow();
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        window.setStatusBarColor(0xFF000000);*/
-
         mLayoutBinding = ActivityMainBinding.inflate(getLayoutInflater());
         mMainConstraintSet.clone(mLayoutBinding.getRoot());
 
         // TODO : add default layout
 
         //to make sure that mini controller is not clickable when its hidden
-        mLayoutBinding.bnBg.setOnClickListener(v -> /* do nothing */{;});
-
-        //Mini Controller
-        mLayoutBinding.miniControllerBg.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                final PlayerFragment playerFragment = new PlayerFragment();
-                mFragmentManager.beginTransaction().setReorderingAllowed(true)
-                        .addToBackStack(FRAGMENT_TAG_PLAYER)
-                        .add(android.R.id.content, PlayerFragment.class, null, FRAGMENT_TAG_PLAYER)
-                        .commit();
-                //TODO : disable button click and enable it after commited
-            }
-        });
-        mLayoutBinding.mcPlayPause.setOnClickListener(v -> mMainSharedVM.togglePlayPause());
-        mLayoutBinding.mcPlayNext.setOnClickListener(v -> mMainSharedVM.playNext());
-        mLayoutBinding.mcPlayPrevious.setOnClickListener(v -> mMainSharedVM.playPrevious());
-        //______________
+        mLayoutBinding.bottomNavBg.setOnClickListener(v -> /* do nothing */{;});
+        mLayoutBinding.miniPlayerContainer.setOnClickListener(v -> /* do nothing */{;});
 
         //Bottom Nav
-        mLayoutBinding.mainBnLocalMedia.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.e(TAG, "make this a method");
+        mLayoutBinding.mainBnHome.setOnClickListener(v -> {
+            Toast.makeText(this, "Not added yet :(", Toast.LENGTH_SHORT).show();
+        });
+        mLayoutBinding.mainBnBrowse.setOnClickListener(v -> {
+            Log.e(TAG, "make this a method");
 
-                if(mCurrentBNFrag instanceof LocalMediaFragment) return;
-                else mSwitchMainBNFrags(new LocalMediaFragment());
-            }
+            if(mCurrentBNFrag instanceof LocalMediaFragment) return;
+            else mSwitchMainBNFrags(new LocalMediaFragment());
         });
 
-        mLayoutBinding.mainBnPlaylists.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mCurrentBNFrag instanceof PlaylistsFragment) return;
-                else mSwitchMainBNFrags(new PlaylistsFragment());
-            }
+        mLayoutBinding.mainBnCollections.setOnClickListener(v -> {
+            if(mCurrentBNFrag instanceof PlaylistsFragment) return;
+            else mSwitchMainBNFrags(new PlaylistsFragment());
         });
 
         //Permission
-        Log.w(TAG, LT.UNTESTED+"test by changing the permission at runtime(both activity and service)");
+        //TODO : test by changing the permission at runtime(both activity and service)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED) {
             mObserveService(); mSetUpFragment(); setContentView(mLayoutBinding.getRoot());
@@ -198,80 +165,36 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        mMainSharedVM.getPlaybackStateLD().removeObservers(this);
+        //mMainSharedVM.getPlaybackStateLD().removeObservers(this);
         mMainSharedVM.getQueueLD().removeObservers(this);
-        mMainSharedVM.getMetadataLD().removeObservers(this);
+        //mMainSharedVM.getMetadataLD().removeObservers(this);
         mMainSharedVM.getServiceConnectionLD().removeObservers(this);
 
         super.onDestroy();
     }
 
     // ___________________________________________________________________________________________
-    
-    private void mUpdateMetadata(@NonNull MediaMetadataCompat metadata)
-            throws IllegalArgumentException {
-        if(metadata == null) throw new IllegalArgumentException("metadata can't be null");
-        String displayName=null,artistName=null;Bitmap displayIcon=null;
-
-        displayName = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE);
-        artistName = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
-        displayIcon = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
-
-        if(TextUtils.isEmpty(displayName)) displayName =
-                getString(R.string.mediadescription_default_display_name);
-        if(TextUtils.isEmpty(artistName)) artistName =
-                getString(R.string.mediadescription_default_artist_name);
-        mLayoutBinding.mcTitleText.setText(displayName);
-        mLayoutBinding.mcArtistText.setText(artistName);
-        if(displayIcon == null) {
-            mLayoutBinding.mcAlbumrtThumbnail.setImageDrawable(
-                    getDrawable(R.drawable.music_item_menu_def_thumb));
-        } else mLayoutBinding.mcAlbumrtThumbnail.setImageBitmap(displayIcon);
-    }
-
-    private void mShowMiniController(boolean show){
-        if(show){
-            //mLayoutBinding.miniController.setVisibility(View.VISIBLE);
-            mMainConstraintSet.connect(R.id.mini_controller_bg, ConstraintSet.BOTTOM,
-                    R.id.main_bn_playlists, ConstraintSet.TOP);
-            mMainConstraintSet.clear(R.id.mini_controller_bg, ConstraintSet.TOP);
-            mMainConstraintSet.applyTo(mLayoutBinding.getRoot());
-            mLayoutBinding.mcTitleText.setSelected(true);
-            mLayoutBinding.mcArtistText.setSelected(true);
-        } else /*hide*/{
-            mMainConstraintSet.connect(R.id.mini_controller_bg, ConstraintSet.TOP,
-                    R.id.main_bn_playlists, ConstraintSet.TOP);
-            mMainConstraintSet.clear(R.id.mini_controller_bg, ConstraintSet.BOTTOM);
-            mMainConstraintSet.applyTo(mLayoutBinding.getRoot());
-        }
-    }
 
     void mShowBN(boolean show){
-        final boolean onScreen = mMainConstraintSet.getConstraint(R.id.main_bn_playlists)
+        final boolean onScreen = mMainConstraintSet.getConstraint(R.id.main_bn_collections)
                     .layout.bottomToBottom == ConstraintSet.PARENT_ID;
         if(show){
             if(onScreen) return;
-            mMainConstraintSet.connect(R.id.main_bn_playlists, ConstraintSet.BOTTOM,
+            mMainConstraintSet.connect(R.id.main_bn_collections, ConstraintSet.BOTTOM,
                     ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
-            mMainConstraintSet.clear(R.id.main_bn_playlists, ConstraintSet.TOP);
+            mMainConstraintSet.clear(R.id.main_bn_collections, ConstraintSet.TOP);
             mMainConstraintSet.applyTo(mLayoutBinding.getRoot());
             
             Toast.makeText(this, "mShowBN(true)", Toast.LENGTH_LONG);
         } else {
             if(!onScreen) return;
-            mMainConstraintSet.connect(R.id.main_bn_playlists, ConstraintSet.TOP,
+            mMainConstraintSet.connect(R.id.main_bn_collections, ConstraintSet.TOP,
                     ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
-            mMainConstraintSet.clear(R.id.main_bn_playlists, ConstraintSet.BOTTOM);
+            mMainConstraintSet.clear(R.id.main_bn_collections, ConstraintSet.BOTTOM);
             mMainConstraintSet.applyTo(mLayoutBinding.getRoot());
             
             Toast.makeText(this, "mShowBN(true)", Toast.LENGTH_LONG);
         }
-    }
-
-    private void mUpdatePlayWhenReady(boolean playWhenReady){
-        this.mPlayWhenReady = playWhenReady;
-        int resId = playWhenReady?R.drawable.exo_controls_pause:R.drawable.exo_controls_play;
-        mLayoutBinding.mcPlayPause.setImageDrawable(getDrawable(resId));
     }
 
     /** used to handle bottom nav clicks **/
@@ -297,12 +220,16 @@ public class MainActivity extends AppCompatActivity {
         if(fragment instanceof PlaylistsFragment){
             final PlaylistsFragment playlistsFragment = new PlaylistsFragment();
             playlistsFragment.setInitialSavedState(mPlaylistsFragSavedState);
-            ft.replace(R.id.main_fragment_container, playlistsFragment, null).commitNow();
+            ft.replace(R.id.main_fragment_container, playlistsFragment, null)
+                    .runOnCommit(() -> mUpdateBottomNavActiveElement(PlaylistsFragment.TAG))
+                    .commit();
             mCurrentBNFrag = playlistsFragment;
         } else if(fragment instanceof LocalMediaFragment){
             final LocalMediaFragment localMediaFragment = new LocalMediaFragment();
             localMediaFragment.setInitialSavedState(mLocalMediaFragSavedState);
-            ft.replace(R.id.main_fragment_container, localMediaFragment, null).commitNow();
+            ft.replace(R.id.main_fragment_container, localMediaFragment, null)
+                    .runOnCommit(() -> mUpdateBottomNavActiveElement(LocalMediaFragment.TAG))
+                    .commit();
             mCurrentBNFrag = localMediaFragment;
         } else {
             Log.e(TAG, "mSwitchMainBNFrags called with invalid fragment");
@@ -312,59 +239,46 @@ public class MainActivity extends AppCompatActivity {
     private void mObserveService() throws IllegalStateException{
         if(mMainSharedVM == null) throw new IllegalStateException("ViewModel is null");
         mMainSharedVM.getServiceConnectionLD().observe(this, new Observer<Byte>() {
-            @Override public void onChanged(Byte aByte) {
-                if(aByte == null) { return; }
-                switch (aByte){
+            @Override public void onChanged(Byte status) {
+                switch (status){
+                    case 0 /*idle*/:{
+
+                        break;
+                    }
                     case ServiceMediaPlayback.SERVICE_CONNECTED:{
-                        mMainSharedVM.getPlaybackStateLD().observe(MainActivity.this,
-                                new Observer<PlaybackStateCompat>() {
-                                    @Override
-                                    public void onChanged(PlaybackStateCompat stateCompat) {
-                                        //dont check for null
-                                        final Bundle extras = stateCompat.getExtras();
-                                        boolean playWhenReady = false;
-                                        if(extras!=null){
-                                            playWhenReady = stateCompat.getExtras().getBoolean(
-                                                    ServiceMediaPlayback.EXTRAS_KEY_PLAY_WHEN_READY, false);
-                                        }
-                                        mUpdatePlayWhenReady(playWhenReady);
+                        mMainSharedVM.getQueueLD().observe(MainActivity.this, new Observer<List<MediaSessionCompat.QueueItem>>() {
+                            @Override
+                            public void onChanged(List<MediaSessionCompat.QueueItem> queueItems) {
+                                //Show hide mini player
+                                /*
+                                TODO : try different implementation with only one instance of MiniPlayerFragment
+                                        ,where miniplayer hides/shows itself
+                                 */
+                                Fragment miniPlayerFrag = mFragmentManager.findFragmentByTag(MiniPlayerFragment.TAG);
+                                if(queueItems.isEmpty()){
+                                    if(miniPlayerFrag != null){
+                                        mFragmentManager.beginTransaction().setReorderingAllowed(true)
+                                                .remove(miniPlayerFrag)
+                                                .commitNow();
                                     }
-                                });
-                        mMainSharedVM.getMetadataLD().observe(MainActivity.this,
-                                new Observer<MediaMetadataCompat>() {
-                                    @Override
-                                    public void onChanged(MediaMetadataCompat mediaMetadataCompat) {
-                                        mUpdateMetadata(mediaMetadataCompat);
+                                } else {
+                                    if(miniPlayerFrag == null){
+                                        mFragmentManager.beginTransaction().setReorderingAllowed(true)
+                                                .add(R.id.mini_player_container,
+                                                        MiniPlayerFragment.class, null, MiniPlayerFragment.TAG)
+                                                .commitNow();
                                     }
-                                });
-                        mMainSharedVM.getQueueLD().observe(MainActivity.this,
-                                new Observer<List<MediaSessionCompat.QueueItem>>() {
-                                    @Override
-                                    public void onChanged(List<MediaSessionCompat.QueueItem> queueItems) {
-                                        Log.d(TAG, "minicontroller queue onChanged called");
-                                        mCurrentQueue = queueItems;
-                                        if(queueItems.isEmpty()){
-                                            Log.w(TAG, LT.TEMP_IMPLEMENTATION);
-                                            mShowMiniController(false);
-                                            mFragmentManager.popBackStackImmediate(FRAGMENT_TAG_PLAYER,
-                                                    FragmentManager.POP_BACK_STACK_INCLUSIVE);
-                                        } else mShowMiniController(true);
-                                    }
-                                });
+                                }
+                            }
+                        });
                         break;
                     }
                     case ServiceMediaPlayback.SERVICE_SUSPENDED: {
-                        Log.w(TAG, LT.UNIMPLEMENTED + "Service Suspended");
-                        mMainSharedVM.getPlaybackStateLD().removeObservers(MainActivity.this);
-                        mMainSharedVM.getMetadataLD().removeObservers(MainActivity.this);
-                        mMainSharedVM.getQueueLD().removeObservers(MainActivity.this);
+                        //TODO : notify user
                         break;
                     }
                     case ServiceMediaPlayback.SERVICE_FAILED: {
-                        Log.w(TAG, LT.UNIMPLEMENTED + "Service Failed");
-                        mMainSharedVM.getPlaybackStateLD().removeObservers(MainActivity.this);
-                        mMainSharedVM.getMetadataLD().removeObservers(MainActivity.this);
-                        mMainSharedVM.getQueueLD().removeObservers(MainActivity.this);
+                        //TODO : notify user
                         break;
                     }
                 }
@@ -372,11 +286,40 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void mUpdateBottomNavActiveElement(@Nullable String tag){
+        //TODO : use better algorithm also make it thread safe
+        final Resources res = getResources();
+        final int defaultColor = ResourcesCompat.getColor(res, R.color.bottom_nav_text_color, null);
+        final int activeColor = ResourcesCompat.getColor(res, R.color.selected_bottom_nav_text_color, null);
+
+        if(tag == null){ tag = ""; }//TODO : test this method with null argument
+        if(tag.equals(LocalMediaFragment.TAG)){
+            try{
+                mLayoutBinding.mainBnHome.setTextColor(defaultColor);
+                mLayoutBinding.mainBnCollections.setTextColor(defaultColor);
+                mLayoutBinding.mainBnBrowse.setTextColor(activeColor);
+            }
+            catch (Exception e) {/*do nothing*/;}
+        } else if(tag.equals(PlaylistsFragment.TAG)){
+            try{
+                mLayoutBinding.mainBnHome.setTextColor(defaultColor);
+                mLayoutBinding.mainBnCollections.setTextColor(activeColor);
+                mLayoutBinding.mainBnBrowse.setTextColor(defaultColor);
+            }
+            catch (Exception e) {/*do nothing*/;}
+        } else {
+            try{
+                mLayoutBinding.mainBnHome.setTextColor(defaultColor);
+                mLayoutBinding.mainBnCollections.setTextColor(defaultColor);
+                mLayoutBinding.mainBnBrowse.setTextColor(defaultColor);
+            }
+            catch (Exception e) {/*do nothing*/;}
+        }
+    }
+
     private void mSetUpFragment(){
         if(mIsSavedInstanceStateNull) {
-            mFragmentManager.beginTransaction().setReorderingAllowed(true)
-                    .add(R.id.main_fragment_container, new PlaylistsFragment(), null)
-                    .commitNow();
+            mSwitchMainBNFrags(new PlaylistsFragment());
         } else {
             //TODO : restore the last fragment stack
         }

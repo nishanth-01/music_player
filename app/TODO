@@ -10,6 +10,9 @@ In MainSharedViewModel communicate with fragments with LiveData
 
 Make sure media id's are unique
 
+Warning
+    - Use MediaSessions Extras bundle carefully
+
 Fix - Back Press
     - Load data in proper order handle data properly
     - Notification
@@ -17,6 +20,10 @@ Fix - Back Press
     - make sure Popbackstack removes the intented fragment
 
 TODO
+    - Add search features to all required lists
+    - Send null Metadata When nomedia is active
+    - Add time seek bar
+    - Use common textsizes like small, medium, high to all
     - add playlist name verification to AddPlaylistFragment(name size, unique name etc...)
     - Add Multi Select Options to PlaylistSelectorFragment
     - Rebuild PlaylistSelectorFragment UI(use a semi transparent, non fullscreen fragment)
@@ -33,5 +40,6 @@ TODO
     - use swapAdapter() instead of setAdapter()
     - Hide search bar on scroll
     - Add Wifi Sharing feature
-
-NEXT - Add search features to all required lists
+    - Landscape version, Tablet version
+    - Remove temp divider in activity_main with right implementation
+    - Use common alpha value for disabled buttons in transport controlls
