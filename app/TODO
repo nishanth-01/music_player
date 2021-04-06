@@ -18,8 +18,12 @@ Fix - Back Press
     - Notification
     - All EditTexts overflow
     - make sure Popbackstack removes the intented fragment
+    - Check and fix memory leaks
+    - MediaId, MediaDescription shouldnt be null
 
 TODO
+    - Use notification builder efficiently SerciceMediaPlayback , dont set constant data repeatedly
+    - Check Notification channel
     - Add search features to all required lists
     - Send null Metadata When nomedia is active
     - Add time seek bar
@@ -41,3 +45,8 @@ TODO
     - Landscape version, Tablet version
     - Remove temp divider in activity_main with right implementation
     - Use common alpha value for disabled buttons in transport controlls
+    - Add a app volume controller(not system volume) with precise controlls
+    - Add recents, remeber last played queue
+    - Check Notification Behaviour
+    - Work on ServiceMediaPlayback
+    - Test with non null empty data in mediadescription (excepacially notification)
