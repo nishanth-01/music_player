@@ -21,7 +21,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContentResolverCompat;
 import androidx.media.MediaBrowserServiceCompat;
-import androidx.lifecycle.LiveData;
 import androidx.room.Room;
 
 import com.example.mediasession.annotations.Unsatisfied;
@@ -35,11 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 
 @Unsatisfied(reason = {"threading"})
-/* warning make sure to set the updated flag of PlaylistEntity */
-//TODO : update the database at end
-//TODO : replace livedata with appropriate custom implementation(our implementation doesnt require lifecycle)
 //TODO : test the behaviour of room practically (like querying invalid entity etc..)
-/** this class should only used by one service**/
+/* TODO : make sure data loaded only once (static) and each instance queries the class */
 class Repositary {
     static final String TAG = "Repositary";
     
@@ -52,7 +48,7 @@ class Repositary {
 
     static final int MAX_NUMBER_OF_PLAYLIST = 99;
     static final int MAX_NUMBER_OF_PLAYLIST_MEMBER = 200;
-    static final int MAX_PLAYLIST_NAME_CHARACTERS = 30;
+    static final int PLAYLIST_NAME_CHARACTERS_LIMIT = 30;
 
     static final char MEMBER_URI_SEPERATOR = ' '/* A SPACE */;
     
@@ -301,7 +297,7 @@ class Repositary {
             result.sendError(null); return;
         }
 
-        if(playlistName.length() > MAX_PLAYLIST_NAME_CHARACTERS){
+        if(playlistName.length() > PLAYLIST_NAME_CHARACTERS_LIMIT){
             result.sendError(null); return;
             //TODO : send error with error code
         }

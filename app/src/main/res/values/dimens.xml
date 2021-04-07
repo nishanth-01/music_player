@@ -21,8 +21,8 @@
     <dimen name="music_item_options_width">18dp</dimen>
     <dimen name="music_item_options_margin">0dp</dimen>
     <dimen name="music_item_options_padding">6dp</dimen>
-    <dimen name="music_item_title_textsize">17sp</dimen>
-    <dimen name="music_item_artist_name_textsize">14.5sp</dimen>
+    <dimen name="music_item_title_textsize">16.5sp</dimen>
+    <dimen name="music_item_artist_name_textsize">14sp</dimen>
 
     <!-- Playlist Add Button -->
     <dimen name="add_playlist_button_sides">50dp</dimen>
