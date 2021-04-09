@@ -6,8 +6,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,34 +34,12 @@ public class MiniPlayerFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mMainViewModel = new ViewModelProvider(getActivity())
-                .get(MainActivity.MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
-
         Resources resources = getResources();
         mPlayIcon = ResourcesCompat.getDrawable(resources, R.drawable.exo_controls_play, null);
         mPauseIcon = ResourcesCompat.getDrawable(resources, R.drawable.exo_controls_pause, null);
-    }
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        super.onCreateView(inflater, container, savedInstanceState);
-
-        FragmentMiniPlayerBinding binding = FragmentMiniPlayerBinding.inflate(inflater, container, false);
-        mLayout = binding;
-        final View rootView = binding.getRoot();
-        rootView.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                getParentFragmentManager().beginTransaction().setReorderingAllowed(true)
-                        .addToBackStack(null)
-                        .add(android.R.id.content, PlayerFragment.class, null, PlayerFragment.TAG)
-                        .commit();
-                //TODO : disable button click and enable it after commited
-            }
-        });
-        mLayout.playPause.setOnClickListener(v -> mMainViewModel.togglePlayPause());
-        mLayout.playNext.setOnClickListener(v -> mMainViewModel.playNext());
-        mLayout.playPrevious.setOnClickListener(v -> mMainViewModel.playPrevious());
+        mMainViewModel = new ViewModelProvider(getActivity())
+                .get(MainActivity.MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
 
         mMainViewModel.getPlaybackStateLD().observe(MiniPlayerFragment.this, playbackState -> {
             if(playbackState.getState() == PlaybackStateCompat.STATE_PLAYING){
@@ -74,17 +50,22 @@ public class MiniPlayerFragment extends Fragment {
                 mLayout.playPause.setImageDrawable(mPlayIcon);
             }
         });
-
         mMainViewModel.getExtrasLD().observe(MiniPlayerFragment.this, bundle -> {
-            final boolean hasNext = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_NEXT, false);
-            final boolean hasPrevious = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_PREVIOUS, false);
+            final Bundle b = bundle.getBundle(ServiceMediaPlayback.EXTRAS_KEY_TRANSPORTS_CONTROLS_BUNDLE);
+            final boolean canPlayNext = b.getBoolean(
+                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY_NEXT, false);
+            final boolean canPlayPrevious = b.getBoolean(
+                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY_PREVIOUS, false);
+            final boolean canPlay = b.getBoolean(
+                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY, false);
 
-            if(hasNext == true) mLayout.playNext.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            if(canPlay) mLayout.playPause.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            else mLayout.playPause.setImageAlpha(DISABLED_BUTTON_ALPHA);
+            if(canPlayNext) mLayout.playNext.setImageAlpha(ENABLED_BUTTON_ALPHA);
             else mLayout.playNext.setImageAlpha(DISABLED_BUTTON_ALPHA);
-            if(hasPrevious == true) mLayout.playPrevious.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            if(canPlayPrevious) mLayout.playPrevious.setImageAlpha(ENABLED_BUTTON_ALPHA);
             else mLayout.playPrevious.setImageAlpha(DISABLED_BUTTON_ALPHA);
         });
-
         mMainViewModel.getMetadataLD().observe(MiniPlayerFragment.this, mediaMetadata -> {
             if(mediaMetadata == null){
                 mLayout.title.setText(null); mLayout.title.setSelected(false);
@@ -112,6 +93,28 @@ public class MiniPlayerFragment extends Fragment {
                         .getDrawable(getResources(), R.drawable.music_item_menu_def_thumb, null));
             } else mLayout.albumrt.setImageBitmap(displayIcon);
         });
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        super.onCreateView(inflater, container, savedInstanceState);
+
+        FragmentMiniPlayerBinding binding = FragmentMiniPlayerBinding.inflate(inflater, container, false);
+        mLayout = binding;
+        final View rootView = binding.getRoot();
+        rootView.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                getParentFragmentManager().beginTransaction().setReorderingAllowed(true)
+                        .addToBackStack(null)
+                        .add(android.R.id.content, PlayerFragment.class, null, PlayerFragment.TAG)
+                        .commit();
+                //TODO : disable button click and enable it after commited
+            }
+        });
+        mLayout.playPause.setOnClickListener(v -> mMainViewModel.togglePlayPause());
+        mLayout.playNext.setOnClickListener(v -> mMainViewModel.playNext());
+        mLayout.playPrevious.setOnClickListener(v -> mMainViewModel.playPrevious());
 
         return rootView;
     }
@@ -119,14 +122,14 @@ public class MiniPlayerFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-
-        mMainViewModel.getMetadataLD().removeObservers(this);
-        mMainViewModel.getPlaybackStateLD().removeObservers(this);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mMainViewModel.getExtrasLD().removeObservers(this);
+        mMainViewModel.getMetadataLD().removeObservers(this);
+        mMainViewModel.getPlaybackStateLD().removeObservers(this);
         mMainViewModel = null;
     }
 }

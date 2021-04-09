@@ -132,9 +132,7 @@ public class MainSharedViewModel extends AndroidViewModel {
     }
 
     @NonNull
-    LiveData<Bundle> getExtrasLD(){
-        return (LiveData)mExtrasMLD;
-    }
+    LiveData<Bundle> getExtrasLD(){ return (LiveData)mExtrasMLD; }
 
     @NonNull
     LiveData<List<MediaSessionCompat.QueueItem>> getQueueLD(){return (LiveData)mQueueMLD;}
