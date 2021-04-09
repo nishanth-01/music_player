@@ -6,7 +6,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,9 +59,9 @@ public class PlayerFragment extends Fragment {
                         .getDrawable(getResources(), R.drawable.ic_default_albumart, null));
             } else mLayoutBinding.albumart.setImageBitmap(albumArt);
 
-            mLayoutBinding.title.setText(displayName); mLayoutBinding.artist.setText(artistName);
+            mLayoutBinding.title.setText(displayName); mLayoutBinding.title.setSelected(true);
+            mLayoutBinding.artist.setText(artistName); mLayoutBinding.artist.setSelected(true);
         });
-
         mMainSharedVM.getPlaybackStateLD().observe(this, playbackState -> {
             if(playbackState.getState() == PlaybackStateCompat.STATE_PLAYING){
                 mLayoutBinding.playPause.setImageDrawable(mPauseIcon);
@@ -72,14 +71,19 @@ public class PlayerFragment extends Fragment {
                 mLayoutBinding.playPause.setImageDrawable(mPlayIcon);
             }
         });
-
         mMainSharedVM.getExtrasLD().observe(PlayerFragment.this, bundle -> {
-            final boolean hasNext = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_NEXT, false);
-            final boolean hasPrevious = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_PREVIOUS, false);
+            final Bundle b = bundle.getBundle(ServiceMediaPlayback.EXTRAS_KEY_TRANSPORTS_CONTROLS_BUNDLE);
+            final boolean canPlayNext = b.getBoolean(ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY_NEXT, false);
+            final boolean canPlayPrevious = b.getBoolean(
+                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY_PREVIOUS, false);
+            final boolean canPlay = b.getBoolean(
+                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY, false);
 
-            if(hasNext == true) mLayoutBinding.playNext.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            if(canPlay) mLayoutBinding.playPause.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            else mLayoutBinding.playPause.setImageAlpha(DISABLED_BUTTON_ALPHA);
+            if(canPlayNext == true) mLayoutBinding.playNext.setImageAlpha(ENABLED_BUTTON_ALPHA);
             else mLayoutBinding.playNext.setImageAlpha(DISABLED_BUTTON_ALPHA);
-            if(hasPrevious == true) mLayoutBinding.playPrevious.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            if(canPlayPrevious == true) mLayoutBinding.playPrevious.setImageAlpha(ENABLED_BUTTON_ALPHA);
             else mLayoutBinding.playPrevious.setImageAlpha(DISABLED_BUTTON_ALPHA);
         });
     }
@@ -89,27 +93,18 @@ public class PlayerFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mLayoutBinding = FragmentPlayerBinding.inflate(inflater, container, false);//check and change to true
         ViewCompat.setTransitionName(mLayoutBinding.albumart, getString(R.string.transisition_name_albumart));
-        return mLayoutBinding.getRoot();
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        mLayoutBinding.getRoot().setOnClickListener(null);
-        mLayoutBinding.title.setSelected(true); mLayoutBinding.artist.setSelected(true);
-        mLayoutBinding.queue.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                QueueFragment queueFragment = new QueueFragment();
-                getParentFragmentManager().beginTransaction().setReorderingAllowed(true)
-                        .addToBackStack(null)
-                        .add(android.R.id.content, queueFragment, null)
-                        .commit();
-            }
-        });
 
         mLayoutBinding.playPause.setOnClickListener(v -> mMainSharedVM.togglePlayPause());
         mLayoutBinding.playNext.setOnClickListener(v -> mMainSharedVM.playNext());
         mLayoutBinding.playPrevious.setOnClickListener(v -> mMainSharedVM.playPrevious());
+        mLayoutBinding.queue.setOnClickListener(v -> {
+            QueueFragment queueFragment = new QueueFragment();
+            getParentFragmentManager().beginTransaction().setReorderingAllowed(true)
+                    .addToBackStack(null)
+                    .add(android.R.id.content, queueFragment, null)
+                    .commit();
+        });
+        return mLayoutBinding.getRoot();
     }
 
     @Override
@@ -118,20 +113,20 @@ public class PlayerFragment extends Fragment {
     }
 
     @Override
-    public void onStop() {
-        mMainSharedVM.getMetadataLD().removeObservers(this);
-        mMainSharedVM.getPlaybackStateLD().removeObservers(this);
-        super.onStop();
-    }
-
-    @Override
     public void onDestroyView() {
-        mLayoutBinding.getRoot().setOnClickListener(null);
         super.onDestroyView();
+
+        mLayoutBinding.playPause.setOnClickListener(null);
+        mLayoutBinding.playNext.setOnClickListener(null);
+        mLayoutBinding.playPrevious.setOnClickListener(null);
+        mLayoutBinding.queue.setOnClickListener(null);
     }
 
     @Override
     public void onDestroy() {
+        mMainSharedVM.getMetadataLD().removeObservers(this);
+        mMainSharedVM.getPlaybackStateLD().removeObservers(this);
+        mMainSharedVM.getExtrasLD().removeObservers(this);
         mMainSharedVM = null;
         super.onDestroy();
     }

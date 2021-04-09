@@ -298,22 +298,19 @@ public class MainActivity extends AppCompatActivity {
                 mLayoutBinding.mainBnHome.setTextColor(defaultColor);
                 mLayoutBinding.mainBnCollections.setTextColor(defaultColor);
                 mLayoutBinding.mainBnBrowse.setTextColor(activeColor);
-            }
-            catch (Exception e) {/*do nothing*/;}
+            } catch (Exception e) {/*do nothing*/;}
         } else if(tag.equals(PlaylistsFragment.TAG)){
             try{
                 mLayoutBinding.mainBnHome.setTextColor(defaultColor);
                 mLayoutBinding.mainBnCollections.setTextColor(activeColor);
                 mLayoutBinding.mainBnBrowse.setTextColor(defaultColor);
-            }
-            catch (Exception e) {/*do nothing*/;}
+            } catch (Exception e) {/*do nothing*/;}
         } else {
             try{
                 mLayoutBinding.mainBnHome.setTextColor(defaultColor);
                 mLayoutBinding.mainBnCollections.setTextColor(defaultColor);
                 mLayoutBinding.mainBnBrowse.setTextColor(defaultColor);
-            }
-            catch (Exception e) {/*do nothing*/;}
+            } catch (Exception e) {/*do nothing*/;}
         }
     }
 

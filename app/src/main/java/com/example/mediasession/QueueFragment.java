@@ -5,7 +5,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,16 +13,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.mediasession.databinding.FragmentQueueBinding;
 
-import java.util.List;
-
 /*this should be singleton .if not setQueueObserver wont work properly*/
-public class QueueFragment extends Fragment {
+public class QueueFragment extends Fragment implements QueueListAdapterListener {
     public static final String TAG = QueueFragment.class.getCanonicalName();
 
     private final int ENABLED_BUTTON_ALPHA = 255;
@@ -47,13 +43,34 @@ public class QueueFragment extends Fragment {
                 .get(MainActivity.MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
 
         mMainSharedVM.getExtrasLD().observe(QueueFragment.this, bundle -> {
-            final boolean hasNext = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_NEXT, false);
-            final boolean hasPrevious = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_PREVIOUS, false);
+            final Bundle b = bundle.getBundle(ServiceMediaPlayback.EXTRAS_KEY_TRANSPORTS_CONTROLS_BUNDLE);
+            final boolean canPlayNext = b.getBoolean(
+                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY_NEXT, false);
+            final boolean canPlayPrevious = b.getBoolean(
+                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY_PREVIOUS, false);
+            final boolean canplay = b.getBoolean(
+                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY, false);
 
-            if(hasNext == true) mLayoutBinding.playNext.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            if(canplay) mLayoutBinding.playPause.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            else mLayoutBinding.playPause.setImageAlpha(DISABLED_BUTTON_ALPHA);
+            if(canPlayNext) mLayoutBinding.playNext.setImageAlpha(ENABLED_BUTTON_ALPHA);
             else mLayoutBinding.playNext.setImageAlpha(DISABLED_BUTTON_ALPHA);
-            if(hasPrevious == true) mLayoutBinding.playPrevious.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            if(canPlayPrevious) mLayoutBinding.playPrevious.setImageAlpha(ENABLED_BUTTON_ALPHA);
             else mLayoutBinding.playPrevious.setImageAlpha(DISABLED_BUTTON_ALPHA);
+        });
+        mMainSharedVM.getQueueLD().observe(this, queueItems -> {
+            //TODO : handle data change properly without changing adapter
+            mLayoutBinding.list.setAdapter(new QueueListAdapter(queueItems, QueueFragment.this,
+                    ResourcesCompat.getDrawable(getResources(), R.drawable.ic_default_albumart_thumb, null)));
+        });
+        mMainSharedVM.getPlaybackStateLD().observe(this, stateCompat -> {
+            if(stateCompat.getState() == PlaybackStateCompat.STATE_PLAYING){
+                mLayoutBinding.playPause.setImageDrawable(mPauseIcon);
+            } else if(stateCompat.getState() == PlaybackStateCompat.STATE_BUFFERING){
+                //TODO : show buffer ring
+            } else {
+                mLayoutBinding.playPause.setImageDrawable(mPlayIcon);
+            }
         });
     }
 
@@ -69,60 +86,21 @@ public class QueueFragment extends Fragment {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        mMainSharedVM.getQueueLD().observe(this, new Observer<List<MediaSessionCompat.QueueItem>>() {
-            @Override
-            public void onChanged(List<MediaSessionCompat.QueueItem> queueItems) {
-                Log.w("QueueFragment", LT.TEMP_IMPLEMENTATION);
-                mLayoutBinding.list.setAdapter(new QueueListAdapter(queueItems, new QueueListAdapterListener() {
-                    @Override
-                    public void onRemoveClicked(MediaSessionCompat.QueueItem queueItem) {
-                        mMainSharedVM.removeQueueItem(queueItem);
-                    }
-
-                    @Override
-                    public void onItemClicked(MediaSessionCompat.QueueItem queueItem) {
-                        mMainSharedVM.skipToQueueItem(queueItem);
-                    }
-                }, ResourcesCompat.getDrawable(getResources(), R.drawable.ic_default_albumart_thumb, null)));
-            }
-        });
-        mMainSharedVM.getPlaybackStateLD().observe(this, new Observer<PlaybackStateCompat>() {
-            @Override
-            public void onChanged(PlaybackStateCompat stateCompat) {
-                if(stateCompat.getState() == PlaybackStateCompat.STATE_PLAYING){
-                    mLayoutBinding.playPause.setImageDrawable(mPauseIcon);
-                } else if(stateCompat.getState() == PlaybackStateCompat.STATE_BUFFERING){
-                    //TODO : show buffer ring
-                } else {
-                    mLayoutBinding.playPause.setImageDrawable(mPlayIcon);
-                }
-            }
-        });
-        mMainSharedVM.getExtrasLD().observe(QueueFragment.this, bundle -> {
-            final boolean hasNext = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_NEXT, false);
-            final boolean hasPrevious = bundle.getBoolean(ServiceMediaPlayback.EXTRAS_KEY_HAS_PREVIOUS, false);
-
-            if(hasNext == true) mLayoutBinding.playNext.setImageAlpha(ENABLED_BUTTON_ALPHA);
-            else mLayoutBinding.playNext.setImageAlpha(DISABLED_BUTTON_ALPHA);
-            if(hasPrevious == true) mLayoutBinding.playPrevious.setImageAlpha(ENABLED_BUTTON_ALPHA);
-            else mLayoutBinding.playPrevious.setImageAlpha(DISABLED_BUTTON_ALPHA);
-        });
-    }
-
-    @Override
-    public void onStop() {
+    public void onDestroy() {
+        super.onDestroy();
         mMainSharedVM.getPlaybackStateLD().removeObservers(this);
         mMainSharedVM.getQueueLD().removeObservers(this);
         mMainSharedVM.getExtrasLD().removeObservers(this);
-        super.onStop();
+        mMainSharedVM = null;
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        mMainSharedVM.getExtrasLD().removeObservers(this);
-        mMainSharedVM = null;
+    public void onRemoveClicked(MediaSessionCompat.QueueItem queueItem) {
+        mMainSharedVM.removeQueueItem(queueItem);
+    }
+
+    @Override
+    public void onItemClicked(MediaSessionCompat.QueueItem queueItem) {
+        mMainSharedVM.skipToQueueItem(queueItem);
     }
 }

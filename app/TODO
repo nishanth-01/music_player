@@ -12,14 +12,25 @@ Make sure media id's are unique
 
 Warning
     - Use MediaSessions Extras bundle carefully
+    - put Bundle into EXTRAS_BUNDLE
+    - SeviceMediaPlayback's player state can't be Player.STATE_ENDED
 
-Fix - Back Press
+Fix - Back Press & lag in ui transition
+    - PlaybackState
     - Load data in proper order handle data properly
     - Notification
     - All EditTexts overflow
     - make sure Popbackstack removes the intented fragment
+    - Check and fix memory leaks
+    - MediaId, MediaDescription shouldnt be null
+    - Notifications priority
+    - Make sure inner classes are handled properly
+    - Pictures(Bitmap, Drawable etc...) used every where
+    - Playpause button
 
 TODO
+    - Use notification builder efficiently SerciceMediaPlayback , dont set constant data repeatedly
+    - Check Notification channel
     - Add search features to all required lists
     - Send null Metadata When nomedia is active
     - Add time seek bar
@@ -41,3 +52,15 @@ TODO
     - Landscape version, Tablet version
     - Remove temp divider in activity_main with right implementation
     - Use common alpha value for disabled buttons in transport controlls
+    - Add a app volume controller(not system volume) with precise controlls
+    - Add recents, remeber last played queue
+    - Check Notification Behaviour
+    - Work on ServiceMediaPlayback
+    - Test with non null empty data in mediadescription (excepacially notification)
+    - Check if notification are disabled
+    - Test with max number of playlists, playlistmembers, queue
+    - update current active queue item
+
+Commit - 'Media Service, Notification rewrite and tweaks'
+
+Now - fix notification bug
