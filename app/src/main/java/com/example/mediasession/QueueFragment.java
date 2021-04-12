@@ -44,14 +44,17 @@ public class QueueFragment extends Fragment implements QueueListAdapterListener 
 
         mMainSharedVM.getExtrasLD().observe(QueueFragment.this, bundle -> {
             final Bundle b = bundle.getBundle(ServiceMediaPlayback.EXTRAS_KEY_TRANSPORTS_CONTROLS_BUNDLE);
-            final boolean canPlayNext = b.getBoolean(
-                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY_NEXT, false);
-            final boolean canPlayPrevious = b.getBoolean(
-                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY_PREVIOUS, false);
-            final boolean canplay = b.getBoolean(
-                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY, false);
 
-            if(canplay) mLayoutBinding.playPause.setImageAlpha(ENABLED_BUTTON_ALPHA);
+            boolean canPlayNext = false;
+            boolean canPlayPrevious = false;
+            boolean canPlay = false;
+            if(b != null){
+                canPlayNext     = b.getBoolean(ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_HAS_NEXT, false);
+                canPlayPrevious = b.getBoolean(ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_HAS_PREVIOUS, false);
+                canPlay         = b.getBoolean(ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY, false);
+            }
+
+            if(canPlay) mLayoutBinding.playPause.setImageAlpha(ENABLED_BUTTON_ALPHA);
             else mLayoutBinding.playPause.setImageAlpha(DISABLED_BUTTON_ALPHA);
             if(canPlayNext) mLayoutBinding.playNext.setImageAlpha(ENABLED_BUTTON_ALPHA);
             else mLayoutBinding.playNext.setImageAlpha(DISABLED_BUTTON_ALPHA);

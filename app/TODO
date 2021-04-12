@@ -11,11 +11,13 @@ In MainSharedViewModel communicate with fragments with LiveData
 Make sure media id's are unique
 
 Warning
-    - Use MediaSessions Extras bundle carefully
-    - put Bundle into EXTRAS_BUNDLE
+    - make sure MediaSessionService's EXTRAS_BUNDLE is never null
     - SeviceMediaPlayback's player state can't be Player.STATE_ENDED
+    - Use commitNow with care
+    - Make sure that button clicks trigger actions only once
 
-Fix - Back Press & lag in ui transition
+Fix - local media not showing on first install
+    - Back Press & lag in ui transition
     - PlaybackState
     - Load data in proper order handle data properly
     - Notification
@@ -31,6 +33,7 @@ Fix - Back Press & lag in ui transition
 TODO
     - Use notification builder efficiently SerciceMediaPlayback , dont set constant data repeatedly
     - Check Notification channel
+    - Handle system initiated process death of Service
     - Add search features to all required lists
     - Send null Metadata When nomedia is active
     - Add time seek bar
@@ -60,7 +63,10 @@ TODO
     - Check if notification are disabled
     - Test with max number of playlists, playlistmembers, queue
     - update current active queue item
+    - Add swipe animation to miniplayer on media transistion
 
 Commit - 'Media Service, Notification rewrite and tweaks'
 
-Now - fix notification bug
+Now - complete notification
+    - fix notification sound
+    - mPlayer

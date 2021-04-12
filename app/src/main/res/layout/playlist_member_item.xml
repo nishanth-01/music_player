@@ -44,7 +44,7 @@
         android:ellipsize="end"
         android:singleLine="true"
         android:textAlignment="textStart"
-        android:textColor="#e0e0e0"
+        android:textColor="@color/common_artist_name_color"
         android:textSize="@dimen/music_item_artist_name_textsize"
         android:paddingStart="9dp"
 

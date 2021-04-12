@@ -41,7 +41,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:padding="2dp"
-        android:textColor="#CCC"
+        android:textColor="@color/common_artist_name_color"
         android:textSize="@dimen/fragment_mini_player_artist_name_size"
 
         android:ellipsize="marquee"

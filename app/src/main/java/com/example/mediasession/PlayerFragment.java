@@ -46,7 +46,7 @@ public class PlayerFragment extends Fragment {
                 .get(MainActivity.MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
 
         mMainSharedVM.getMetadataLD().observe(this, mediaMetadata -> {
-            String displayName = mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE);
+            String displayName = mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
             String artistName = mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
             Bitmap albumArt = mediaMetadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
 
@@ -73,11 +73,15 @@ public class PlayerFragment extends Fragment {
         });
         mMainSharedVM.getExtrasLD().observe(PlayerFragment.this, bundle -> {
             final Bundle b = bundle.getBundle(ServiceMediaPlayback.EXTRAS_KEY_TRANSPORTS_CONTROLS_BUNDLE);
-            final boolean canPlayNext = b.getBoolean(ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY_NEXT, false);
-            final boolean canPlayPrevious = b.getBoolean(
-                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY_PREVIOUS, false);
-            final boolean canPlay = b.getBoolean(
-                    ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY, false);
+
+            boolean canPlayNext = false;
+            boolean canPlayPrevious = false;
+            boolean canPlay = false;
+            if(b != null){
+                canPlayNext     = b.getBoolean(ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_HAS_NEXT, false);
+                canPlayPrevious = b.getBoolean(ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_HAS_PREVIOUS, false);
+                canPlay         = b.getBoolean(ServiceMediaPlayback.TRANSPORTS_CONTROLS_BUNDLE_KEY_CAN_PLAY, false);
+            }
 
             if(canPlay) mLayoutBinding.playPause.setImageAlpha(ENABLED_BUTTON_ALPHA);
             else mLayoutBinding.playPause.setImageAlpha(DISABLED_BUTTON_ALPHA);

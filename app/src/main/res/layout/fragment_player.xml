@@ -46,7 +46,7 @@
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
         android:text="Dr.Dre"
-        android:textColor="@color/white"
+        android:textColor="@color/common_artist_name_color"
         android:textSize="@dimen/fragment_player_artist_name_size"
 
         app:layout_constraintEnd_toEndOf="@id/albumart"

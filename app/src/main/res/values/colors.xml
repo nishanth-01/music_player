@@ -10,6 +10,7 @@
 
     <color name="comman_black">#000</color>
     <color name="comman_grey">#222</color>
+    <color name="common_artist_name_color">#CCC</color>
 
     <color name="main_bottom_nav_divider_color">#424242</color>
     <color name="bottom_nav_text_color">#8FFF</color>
