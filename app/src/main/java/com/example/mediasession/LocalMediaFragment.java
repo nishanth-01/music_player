@@ -7,8 +7,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -54,21 +56,6 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
                 .get(MainActivity.MAIN_SHARED_VIEW_MODEL_KEY, MainSharedViewModel.class);
                 
         mFragmentManger = getParentFragmentManager();
-
-        mOnScrollListener = new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                //Log.d(TAG, "dx:"+Integer.valueOf(dx)+" dy:"+Integer.valueOf(dy));
-                //if(dy > -1) mLayout.searchBarHolder.setVisibility(View.GONE);
-                //else mLayout.searchBarHolder.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-            }
-        };
         
         mPlaylistSelectorResultListener = new FragmentResultListener(){
             @Override
@@ -121,6 +108,14 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
         mLayout = FragmentLocalMediaBinding.inflate(inflater, container, false);
         mLayout.mainList.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        mLayout.mainList.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(v instanceof RecyclerView) mLayout.mainList.onTouchEvent(event);
+                return true;
+            }
+        });
+
         mMainSharedVM.getAllLocalMediaLD().observe(this,
                 new Observer<List<MediaBrowserCompat.MediaItem>>() {
                     @Override
@@ -133,8 +128,6 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
                                 LocalMediaFragment.this,
                                 ResourcesCompat.getDrawable(getResources(),
                                         R.drawable.ic_default_albumart_thumb, null)));
-
-                        mLayout.mainList.addOnScrollListener(mOnScrollListener);
                     }
                 });
         return mLayout.getRoot();
@@ -142,7 +135,6 @@ public class LocalMediaFragment extends Fragment implements ClickInterface {
 
     @Override
     public void onDestroyView() {
-        mLayout.mainList.removeOnScrollListener(mOnScrollListener);
         mMainSharedVM.getAllLocalMediaLD().removeObservers(this);
         super.onDestroyView();
     }

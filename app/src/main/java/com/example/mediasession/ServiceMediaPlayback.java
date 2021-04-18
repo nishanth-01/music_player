@@ -8,11 +8,13 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
+import android.content.res.Resources;
 import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -130,6 +132,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     private NotificationCompat.Builder mNotificationBuilder;
     private NotificationManagerCompat mNotificationMangerCompat;
     private NotificationManager mNotificationManger;
+    private androidx.media.app.NotificationCompat.MediaStyle mMediaStyle;
     private PendingIntent mMediaNotificationContentPendingIntent;
     private PendingIntent mPlayPreviousPendingIntent;
     private PendingIntent mPlayNextPendingIntent;
@@ -152,6 +155,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
     private final Bundle EXTRAS_BUNDLE = new Bundle();
 
     private MediaMetadataCompat mCurrentMetaData;   //only for mGetMetadataFrom
+    private Bitmap mDefMusicBitmap;
 
     private boolean mInForeground ;
     private boolean mLoadBrowsableMediaItemsCalled;
@@ -379,6 +383,8 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
 
                 //Notifications
                 if(!mNotificationActive(MEDIA_NOTIFICATION_ID)) return;
+
+
                 mNotificationBuilder.clearActions();
                 mNotificationBuilder
                         .addAction(new NotificationCompat.Action(
@@ -392,7 +398,8 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                         .addAction(new NotificationCompat.Action(
                                 R.drawable.exo_controls_next,
                                 "Play Next",
-                                mPlayNextPendingIntent));
+                                mPlayNextPendingIntent))
+                        .setStyle(mMediaStyle);
                 mNotificationMangerCompat.notify(MEDIA_NOTIFICATION_ID, mNotificationBuilder.build());
             }
 
@@ -414,10 +421,15 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                 if(timeline.isEmpty()){
                     mReciveTransportControlls = false; mMediaSession.setQueue(new ArrayList<>(0));
 
-                    stopForeground(STOP_FOREGROUND_REMOVE);//TODO : check what if this called when service is not in foreground
+                    //TODO : check what if this called when service is not in foreground
+                    stopForeground(STOP_FOREGROUND_REMOVE);
                     return;
                 }
-                startForeground(MEDIA_NOTIFICATION_ID, mNotificationBuilder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+                startForeground(
+                        MEDIA_NOTIFICATION_ID,
+                        mNotificationBuilder.build(),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                );
 
                 mUpdateTransportsControls(timeline);
 
@@ -490,10 +502,10 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                 new Intent(INTENT_ACTION_PLAY_PAUSE, null, applicationContext, ServiceMediaPlayback.class),
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        androidx.media.app.NotificationCompat.MediaStyle mediaStyle = new androidx.media.app.NotificationCompat.MediaStyle()
-                        .setMediaSession(mMediaSession.getSessionToken())
-                        .setShowActionsInCompactView(0, 1, 2);
-
+        //Notification default values
+        mMediaStyle = new androidx.media.app.NotificationCompat.MediaStyle();
+        mMediaStyle.setMediaSession(mMediaSession.getSessionToken());
+        mMediaStyle.setShowActionsInCompactView(0, 1, 2);
         mNotificationBuilder
                 /*TODO : .setLargeIcon() */
                 .setSmallIcon(R.drawable.ic_default_albumart_thumb)//replace with proper icon
@@ -501,7 +513,6 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                 .setChannelId(MEDIA_NOTIFICATION_CHANNEL_ID)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setSound(null)
-                .setStyle(mediaStyle)
                 .setContentIntent(mMediaNotificationContentPendingIntent)
                 .setAutoCancel(false);
 
@@ -579,6 +590,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
         //Player
         if(mPlayer != null) {
             mPlayer.setHandleAudioBecomingNoisy(false); mPlayer.setForegroundMode(false);
+            mPlayer.clearMediaItems();//this calls onTimelineChanged with empty timeline which stops foreground service
             mPlayer.removeListener(mPlayerEventListener);
             mPlayer.release(); mPlayer = null;
         }
@@ -593,6 +605,10 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
         mNotificationBuilder = null; mNotificationMangerCompat = null; mNotificationManger = null;
 
         mMediaSession.setActive(false); mMediaSession.release(); mMediaSession = null;
+
+        if(mDefMusicBitmap != null){
+            mDefMusicBitmap.recycle(); mDefMusicBitmap = null;
+        }
     }
 
     @Override
@@ -643,6 +659,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                 if(mediaItems != null) {
                     if(mediaItems.isEmpty()){
                         //TODO : fill in the blank
+                        result.sendResult(null);
                     } else {
                         mPlayer.setPlayWhenReady(false);
                         mPlayer.clearMediaItems();
@@ -760,14 +777,14 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
         }
         String title    = null;
         String artist   = null;
-        Bitmap albumArt = null;
         final long duration = mPlayer.getContentDuration();
 
         String currentMediaId = mediaItem.mediaId;
         MediaDescriptionCompat md = mSharedStorageAudioMap.get(currentMediaId).getDescription();//TODO : CAN_CRASH
 
         title = (String)md.getTitle(); artist = md.getExtras().getString(MDEK_ARTIST);
-        //TODO : send bitmap uri instead of bitmap
+        //TODO : is their any other ways to check if a bitmap uri is valid, if true replace the below method with that
+        Bitmap albumArt = null;
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
             try{
                 albumArt = getContentResolver().loadThumbnail(
@@ -776,92 +793,44 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                         null
                 );
             } catch (IOException e){
-                Log.e(TAG, "IOException failed to load AlbumArt");
+                Log.e(TAG, "failed to load AlbumArt");
             }
         } else {
             //TODO : fill in the blank
         }
-        //TODO : cache the default bitmap or set uri
-        if(albumArt == null) albumArt = BitmapFactory.decodeResource(
-                getResources(),
-                R.drawable.baseline_album_black_48dp
-        );
+        //TEMP
+        if(mDefMusicBitmap == null){
+            mDefMusicBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_def_music_l);
+        }
 
         mSessionMetaDataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
-                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration)
-                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt);
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration);
         mMediaSession.setMetadata(mSessionMetaDataBuilder.build());
 
         //Notifications
         mNotificationBuilder.clearActions();
         //TODO : use appropriate icons
         mNotificationBuilder
-                .addAction(new NotificationCompat.Action(R.drawable.exo_controls_previous, "Play Previous", mPlayPreviousPendingIntent))
+                .addAction(new NotificationCompat.Action(
+                        R.drawable.exo_controls_previous,
+                        "Play Previous",
+                        mPlayPreviousPendingIntent))
                 .addAction(new NotificationCompat.Action(
                         (mPlayer.isPlaying()) ? R.drawable.exo_controls_pause : R.drawable.exo_controls_play,
                         "Play-Pause Toggle",
                         mPlayPausePendingIntent))
-                .addAction(new NotificationCompat.Action(R.drawable.exo_controls_next, "Play Next", mPlayNextPendingIntent))
-                .setLargeIcon(albumArt)
+                .addAction(new NotificationCompat.Action(
+                        R.drawable.exo_controls_next,
+                        "Play Next",
+                        mPlayNextPendingIntent))
+                .setLargeIcon((albumArt == null) ? mDefMusicBitmap : albumArt)
                 .setContentTitle(title)
-                .setContentText(artist);
+                .setContentText(artist)
+                .setStyle(mMediaStyle);
         mNotificationMangerCompat.notify(MEDIA_NOTIFICATION_ID, mNotificationBuilder.build());
     }
-
-    /*private void mUpdatePlaybackState(){
-        if(mPlayer == null) throw new IllegalArgumentException("Player cant be null when updating playback state");
-
-        int playbackState = PlaybackStateCompat.STATE_NONE;
-        long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
-
-        switch (mPlayer.getPlaybackState()){
-            case(Player.STATE_IDLE):{
-                playbackState = PlaybackStateCompat.STATE_NONE;
-                break;
-            }
-            case(Player.STATE_READY):{
-                playbackState = mPlayer.isPlaying() ?
-                        PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_STATE_PAUSED;
-                position = mPlayer.getContentPosition()
-                break;
-            }
-            case(Player.STATE_BUFFERING):{
-                playbackState = PlaybackStateCompat.STATE_BUFFERING;
-                position = mPlayer.getContentPosition();
-                break;
-            }
-            case(Player.STATE_ENDED):{
-                playbackState = PlaybackStateCompat.STATE_STOPPED;
-                break;
-            }
-        }
-        mUpdatePlaybackState(playbackState, position, mPlayer.getPlaybackParameters().speed);
-    }*/
-
-    /*private void mUpdateTransportControllsData(boolean clear){
-        //TODO : include notification
-        if(clear){
-            EXTRAS_BUNDLE.putBoolean(TRANSPORTS_CONTROLS_BUNDLE_KEY_HAS_NEXT, false);
-            EXTRAS_BUNDLE.putBoolean(TRANSPORTS_CONTROLS_BUNDLE_KEY_HAS_PREVIOUS, false);
-            mMediaSession.setExtras(EXTRAS_BUNDLE);
-            return;
-        }
-        int currentWindowIndex = mPlayer.getCurrentWindowIndex();
-        int lastWindowIndex = mPlayer.getCurrentTimeline().getWindowCount() - 1;
-
-        EXTRAS_BUNDLE.putBoolean(TRANSPORTS_CONTROLS_BUNDLE_KEY_HAS_NEXT,
-                (currentWindowIndex > -1 && currentWindowIndex < lastWindowIndex) ? true : false);
-        EXTRAS_BUNDLE.putBoolean(TRANSPORTS_CONTROLS_BUNDLE_KEY_HAS_PREVIOUS,
-                currentWindowIndex > 0 ? true : false);
-        mMediaSession.setExtras(EXTRAS_BUNDLE);
-
-        //Notifications
-        if(mNotificationActive(MEDIA_NOTIFICATION_ID)){
-
-        }
-    }*/
 
     private boolean mNotificationActive(int notificationId){
         StatusBarNotification activeNotification[] = mNotificationManger.getActiveNotifications();

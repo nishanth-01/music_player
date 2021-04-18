@@ -12,61 +12,56 @@ Make sure media id's are unique
 
 Warning
     - make sure MediaSessionService's EXTRAS_BUNDLE is never null
-    - SeviceMediaPlayback's player state can't be Player.STATE_ENDED
+    - SeviceMediaPlayback's player state shouldn't be Player.STATE_ENDED
     - Use commitNow with care
     - Make sure that button clicks trigger actions only once
 
 Fix - local media not showing on first install
-    - Back Press & lag in ui transition
+    - Back Press & ui transition lag
     - PlaybackState
     - Load data in proper order handle data properly
-    - Notification
     - All EditTexts overflow
     - make sure Popbackstack removes the intented fragment
     - Check and fix memory leaks
-    - MediaId, MediaDescription shouldnt be null
-    - Notifications priority
     - Make sure inner classes are handled properly
     - Pictures(Bitmap, Drawable etc...) used every where
-    - Playpause button
 
 TODO
     - Use notification builder efficiently SerciceMediaPlayback , dont set constant data repeatedly
     - Check Notification channel
     - Handle system initiated process death of Service
-    - Add search features to all required lists
+    - Add search feature to all required lists
     - Send null Metadata When nomedia is active
-    - Add time seek bar
-    - Use common textsizes like small, medium, high to all
+    - Add duration seek bar
+    - Use common textsizes(small, medium, high) to all
     - add playlist name verification to AddPlaylistFragment(name size, unique name etc...)
     - Add Multi Select Options to PlaylistSelectorFragment
-    - Rebuild PlaylistSelectorFragment UI(use a semi transparent, non fullscreen fragment)
+    - Rebuild PlaylistSelectorFragment UI(use non fullscreen fragment)
     - do "notifiy error to user" work
     - fix mini player show and hide dont interupt its movement make it look smooth
-    - Use  a base class for adapters
+    - Take advantage of inheretance , like using a base class for adapters
     - Move values in xml to appropriate files app/res/values folder
     - Write Unit Test
     - Reduce GPU Overdraw
-    - Distinguish bottom nav elements by their size (the selected one is bigger)
+    - Distinguish bottom nav elements by their size (the selected one is bigger than others)
     - Easter Egg : clicking the active bottom nav element multiple times makes the element give a gesture like its annoyed(like moving left to right fastly)
     - use swapAdapter() instead of setAdapter()
     - Hide search bar on scroll
     - Add Wifi Sharing feature
     - Landscape version, Tablet version
-    - Remove temp divider in activity_main with right implementation
-    - Use common alpha value for disabled buttons in transport controlls
     - Add a app volume controller(not system volume) with precise controlls
-    - Add recents, remeber last played queue
-    - Check Notification Behaviour
-    - Work on ServiceMediaPlayback
+    - Add recents, most played and remeber last played queue
     - Test with non null empty data in mediadescription (excepacially notification)
-    - Check if notification are disabled
+    - Check if user disabled notification
     - Test with max number of playlists, playlistmembers, queue
     - update current active queue item
     - Add swipe animation to miniplayer on media transistion
+    - Accesability
+    - What if current playing media item or playlist is clicked again
 
-Commit - 'Media Service, Notification rewrite and tweaks'
-
-Now - complete notification
-    - fix notification sound
-    - mPlayer
+Now - Fix foreground service behaviour
+    - pass metadata bitmap properly
+    - Fragment Managment
+    - load the bitmap in the viewmodel from the uri in session metadata, and pass it to required fragments
+    - Complete notification
+    - app elements life cycle

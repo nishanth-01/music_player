@@ -174,14 +174,14 @@ class Repositary {
                         do {
                             long id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
                             Uri mediaUri = ContentUris.withAppendedId(uri,id);
-                            String mediaId = mediaUri.toString();
                             String displayName = cursor.getString(
                                     cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
-                            if(mIsStringEmpty(displayName)) displayName = defaultDisplayName;
+                            if(displayName==null || displayName.isEmpty()) displayName = defaultDisplayName;
 
                             MediaDescriptionCompat md = mMakeMediaDescriptorForAudioItem(mediaUri
-                                    ,mediaId ,displayName, defaultArtistName, defaultGenreName, defaultDuration);
+                                    ,displayName, defaultArtistName, defaultGenreName, defaultDuration);
                             if (md == null){
+                                //TODO : use a different method to handle this case
                                 Log.e(TAG, "Method:mGetSharedStorageMedia can't make mediadescription, item skipped");
                                 continue;//skip this item
                             }
@@ -461,21 +461,18 @@ class Repositary {
     /*Replace with MediaStore Way*/
     @Nullable
     private MediaDescriptionCompat mMakeMediaDescriptorForAudioItem(@NonNull Uri uri,
-                                                        @NonNull String mediaId,
                                                         String displayName,
                                                         String defaultArtistName,
                                                         String defaultGenre,
                                                         String defaultDuration) {
         //TODO : optimize
-        if(uri==null || mediaId==null) return null;
+        final String mediaId = uri.toString();
+        if(mediaId==null || mediaId.isEmpty()) return null;
 
         MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
         //TODO : Replace MediaMetadataRetriever with MediaStore Way
-        try {
-            mediaMetadataRetriever.setDataSource(mContext, uri);
-        } catch (Exception e) {
-            return null;
-        }
+        try { mediaMetadataRetriever.setDataSource(mContext, uri); }
+        catch (Exception e) { return null; }
 
         String genre = mediaMetadataRetriever
                 .extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE);

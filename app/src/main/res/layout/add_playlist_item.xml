@@ -14,7 +14,8 @@
     <TextView android:id="@+id/add_playlist"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="14dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="18dp"
 
         android:text="New Playlist"
         android:textSize="13sp"
