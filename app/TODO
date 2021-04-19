@@ -51,7 +51,7 @@ TODO
     - Landscape version, Tablet version
     - Add a app volume controller(not system volume) with precise controlls
     - Add recents, most played and remeber last played queue
-    - Test with non null empty data in mediadescription (excepacially notification)
+    - Test with non null empty data in mediadescription (expecially notification)
     - Check if user disabled notification
     - Test with max number of playlists, playlistmembers, queue
     - update current active queue item

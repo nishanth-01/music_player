@@ -807,6 +807,7 @@ public class ServiceMediaPlayback extends MediaBrowserServiceCompat implements A
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration);
+                /* TODO : add bitmap */
         mMediaSession.setMetadata(mSessionMetaDataBuilder.build());
 
         //Notifications

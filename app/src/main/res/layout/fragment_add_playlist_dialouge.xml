@@ -42,7 +42,8 @@
             android:layout_height="wrap_content"
             android:padding="20dp"
             android:text="Create"
-            android:background="@drawable/name_it_later"
+            android:textColor="@color/white"
+            android:background="@drawable/button_bg"
 
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
